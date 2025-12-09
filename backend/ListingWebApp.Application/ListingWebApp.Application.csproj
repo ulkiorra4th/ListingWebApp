@@ -7,15 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Extensions\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\ListingWebApp.Common\ListingWebApp.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="FluentResults" Version="4.0.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     </ItemGroup>
 
 </Project>

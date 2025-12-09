@@ -18,6 +18,24 @@ internal sealed class AccountsRepository : IAccountsRepository
         _context = context;
     }
 
+    public async Task<Result<Account>> GetAccountByEmailAsync(string email)
+    {
+        var account = await _context.Accounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email == email && x.Status != AccountStatus.Deleted);
+
+        if (account is null) return Result.Fail<Account>(new NotFoundError(nameof(Account)));
+        
+        return Account.Create(
+            id: account.Id,
+            email: account.Email,
+            passwordHash: account.PasswordHash,
+            salt:  account.Salt,
+            status: account.Status,
+            createdAt: account.CreatedAt,
+            updatedAt: account.UpdatedAt);
+    }
+
     public async Task<Result<Account>> GetAccountByIdAsync(Guid id)
     {
         var account = await _context.Accounts
@@ -38,8 +56,6 @@ internal sealed class AccountsRepository : IAccountsRepository
 
     public async Task<Result<Guid>> CreateAccountAsync(Account account)
     {
-        // TODO: создавать профиль по умолчанию (на уровне бизнес логики)
-        
         var accountEntity = new AccountEntity
         {
             Id = account.Id,
@@ -50,8 +66,34 @@ internal sealed class AccountsRepository : IAccountsRepository
             CreatedAt = account.CreatedAt,
             UpdatedAt = account.UpdatedAt
         };
+
+        await _context.Accounts.AddAsync(accountEntity);
+        return Result.Ok(accountEntity.Id);
+    }
+
+    public async Task<Result<Guid>> AddProfileToAccountAsync(Profile profile)
+    {
+        var accountEntity = await _context.Accounts
+            .FirstOrDefaultAsync(x => x.Id == profile.AccountId && x.Status != AccountStatus.Deleted);
+
+        if (accountEntity is null)
+            return Result.Fail<Guid>(new NotFoundError(nameof(Account)));
         
-        throw new NotImplementedException();
+        var profileEntity = new ProfileEntity
+        {
+            Id = profile.Id,
+            Account = accountEntity,
+            Nickname = profile.Nickname,
+            Age = profile.Age,
+            IconKey = profile.IconKey,
+            LanguageCode = profile.LanguageCode,
+            CountryCode = profile.CountryCode,
+            CreatedAt = profile.CreatedAt,
+            UpdatedAt = profile.UpdatedAt
+        };
+
+        await _context.Profiles.AddAsync(profileEntity);
+        return Result.Ok(profileEntity.Id);
     }
 
     public async Task<Result> DeleteAccountAsync(Guid id)

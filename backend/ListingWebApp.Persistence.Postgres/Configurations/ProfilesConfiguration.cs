@@ -9,7 +9,7 @@ public sealed class ProfilesConfiguration : IEntityTypeConfiguration<ProfileEnti
     public void Configure(EntityTypeBuilder<ProfileEntity> builder)
     {
         builder.HasKey(p => p.Id);
-        builder.HasOne(p => p.AccountEntity).WithMany(a => a.Profiles);
+        builder.HasOne(p => p.Account).WithMany(a => a.Profiles);
         
         builder.Property(p => p.Nickname)
             .HasMaxLength(64)

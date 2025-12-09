@@ -5,7 +5,7 @@ namespace ListingWebApp.Persistence.Postgres.Entities;
 public sealed class ProfileEntity
 {
     public required Guid Id { get; set; }
-    public required AccountEntity AccountEntity { get; set; }
+    public required AccountEntity Account { get; set; }
 
     public required string Nickname { get; set; }
     public required int Age { get; set; }

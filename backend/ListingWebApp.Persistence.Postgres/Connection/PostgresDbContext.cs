@@ -7,6 +7,7 @@ internal sealed class PostgresDbContext : DbContext
 {
     public DbSet<AccountEntity> Accounts { get; set; }
     public DbSet<ProfileEntity> Profiles { get; set; }
+    public DbSet<SessionEntity> Sessions { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(PostgresDbContext).Assembly);

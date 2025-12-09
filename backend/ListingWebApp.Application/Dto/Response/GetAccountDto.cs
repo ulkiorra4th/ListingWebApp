@@ -1,3 +1,10 @@
+﻿using ListingWebApp.Common.Enums;
+
 namespace ListingWebApp.Application.Dto.Response;
 
-public record GetAccountDto();
+public sealed record GetAccountDto(
+    Guid Id,
+    string Email,
+    AccountStatus Status,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

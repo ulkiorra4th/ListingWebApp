@@ -10,6 +10,8 @@ public sealed class AccountEntity
     public required string PasswordHash { get; set; }
     public required string Salt { get; set; }
 
+    public SessionEntity? Session { get; set; }
+
     public ICollection<ProfileEntity> Profiles { get; set; } = [];
     
     public required AccountStatus Status { get; set; } = AccountStatus.Unverified;

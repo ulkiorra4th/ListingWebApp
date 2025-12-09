@@ -1,26 +1,158 @@
+using FluentResults;
 using ListingWebApp.Application.Abstractions;
+using ListingWebApp.Application.Contracts.Infrastructure;
+using ListingWebApp.Application.Contracts.Persistence;
+using ListingWebApp.Application.Dto.Request;
+using ListingWebApp.Application.Dto.Response;
+using ListingWebApp.Application.Models;
+using ListingWebApp.Common.Errors;
 
 namespace ListingWebApp.Application.Services;
 
 internal sealed class AuthService : IAuthService
 {
-    public async Task<string> Login(string email, string password)
+    private const int RefreshTokenExpiresDays = 30;
+    
+    private readonly IJwtProvider _jwtProvider;
+    private readonly IAccountsRepository _accountsRepository;
+    private readonly ISessionsRepository _sessionsRepository;
+    private readonly ICryptographyService _cryptographyService;
+
+    public AuthService(
+        IJwtProvider jwtProvider, 
+        IAccountsRepository accountsRepository, 
+        ICryptographyService cryptographyService, 
+        ISessionsRepository sessionsRepository)
     {
-        throw new NotImplementedException();
+        _jwtProvider = jwtProvider;
+        _accountsRepository = accountsRepository;
+        _cryptographyService = cryptographyService;
+        _sessionsRepository = sessionsRepository;
     }
 
-    public async Task<string> Register(string email, string password)
+    public async Task<Result<LoginResponseDto>> LoginAsync(string email, string password)
     {
-        throw new NotImplementedException();
+        var accountResult = await _accountsRepository.GetAccountByEmailAsync(email);
+        if (accountResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(accountResult.Errors);
+        }
+
+        var account = accountResult.Value;
+        
+        var isPasswordValid = _cryptographyService.VerifyPassword(account.PasswordHash, account.Salt, password);
+        if (!isPasswordValid)
+        {
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Invalid credentials"));
+        }
+
+        var refreshToken = _cryptographyService.GenerateToken();
+        var refreshHash = _cryptographyService.ComputeSha256(refreshToken);
+        var refreshExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenExpiresDays);
+
+        var sessionResult = await _sessionsRepository.CreateSessionAsync(
+            account,
+            refreshHash,
+            refreshExpiresAt);
+
+        if (sessionResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(sessionResult.Errors);
+        }
+        
+        var accessToken = _jwtProvider.GenerateToken(account);
+        return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
-    public async Task Logout(Guid userId)
+    public async Task<Result<LoginResponseDto>> RegisterAsync(LoginRequestDto dto)
     {
-        throw new NotImplementedException();
+        var hashResult = _cryptographyService.HashPassword(dto.Password);
+        
+        var accountResult = Account.Create(dto.Email, hashResult.Hash, hashResult.Salt);
+        if (accountResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(accountResult.Errors);
+        }
+
+        var createResult = await _accountsRepository.CreateAccountAsync(accountResult.Value);
+        if (createResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(createResult.Errors);
+        }
+
+        var refreshToken = _cryptographyService.GenerateToken();
+        var refreshHash = _cryptographyService.ComputeSha256(refreshToken);
+        var refreshExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenExpiresDays);
+
+        var sessionResult = await _sessionsRepository.CreateSessionAsync(
+            accountResult.Value,
+            refreshHash,
+            refreshExpiresAt);
+
+        if (sessionResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(sessionResult.Errors);
+        }
+        
+        var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
+        return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
-    public async Task Refresh(Guid userId)
+    public async Task<Result> LogoutAsync(Guid userId)
     {
-        throw new NotImplementedException();
+        return await _sessionsRepository.DeleteSessionByAccountIdAsync(userId);
+    }
+
+    public async Task<Result<LoginResponseDto>> RefreshAsync(Guid userId, string refreshToken)
+    {
+        var refreshHash = _cryptographyService.ComputeSha256(refreshToken);
+        var sessionResult = await _sessionsRepository.GetSessionByRefreshTokenHashAsync(refreshHash);
+        if (sessionResult.IsFailed)
+            return Result.Fail<LoginResponseDto>(sessionResult.Errors);
+
+        var session = sessionResult.Value;
+        if (session.AccountId != userId)
+        {
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session), "Session does not belong to account"));
+        }
+
+        if (!session.IsActive || session.ExpiresAt <= DateTime.UtcNow)
+        {
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session), "Session is inactive or expired"));
+        }
+
+        var accountResult = await _accountsRepository.GetAccountByIdAsync(userId);
+        if (accountResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(accountResult.Errors);
+        }
+
+        var newRefreshToken = _cryptographyService.GenerateToken();
+        var newRefreshHash = _cryptographyService.ComputeSha256(newRefreshToken);
+        var refreshExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenExpiresDays);
+
+        var updatedSessionResult = Session.Create(
+            id: session.Id,
+            accountId: session.AccountId,
+            refreshTokenHash: newRefreshHash,
+            isActive: true,
+            createdAt: session.CreatedAt,
+            updatedAt: DateTime.UtcNow,
+            expiresAt: refreshExpiresAt,
+            revokedAt: null);
+
+        if (updatedSessionResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(updatedSessionResult.Errors);
+        }
+
+        var updateResult = await _sessionsRepository.UpdateSessionAsync(updatedSessionResult.Value);
+        if (updateResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(updateResult.Errors);
+        }
+        
+        var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
+        return Result.Ok(new LoginResponseDto(accessToken, newRefreshToken));
     }
 }

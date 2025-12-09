@@ -9,6 +9,6 @@ public interface IProfilesRepository
     Task<Result<List<Profile>>> GetManyProfilesAsync(IEnumerable<Guid> profileIds);
     Task<Result<Guid>> CreateProfileAsync(Profile profile);
     Task<Result> DeleteProfileAsync(Guid id);
-    Task<Result<Profile>> UpdateProfileAsync(Profile profile);
+    Task<Result> UpdateProfileAsync(Profile profile);
     Task<Result<List<Profile>>> GetAllProfilesAsync(Guid accountId);
 }

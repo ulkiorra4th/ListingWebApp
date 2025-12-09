@@ -9,7 +9,7 @@ public sealed class AccountsConfiguration : IEntityTypeConfiguration<AccountEnti
     public void Configure(EntityTypeBuilder<AccountEntity> builder)
     {
         builder.HasKey(a => a.Id);
-        builder.HasMany(a => a.Profiles).WithOne(p => p.AccountEntity);
+        builder.HasMany(a => a.Profiles).WithOne(p => p.Account);
         
         builder.Property(a => a.Email)
             .HasMaxLength(128)

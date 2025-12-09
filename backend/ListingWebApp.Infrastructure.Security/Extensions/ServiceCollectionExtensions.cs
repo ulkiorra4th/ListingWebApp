@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
 
-        services.AddSingleton<IHashingService, HashingService>();
+        services.AddSingleton<ICryptographyService, CryptographyService>();
         services.AddSingleton<IJwtProvider, JwtProvider>();
         
         return services;

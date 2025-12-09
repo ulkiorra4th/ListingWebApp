@@ -1,7 +1,6 @@
 using FluentResults;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Contracts.Persistence;
-using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
 using ListingWebApp.Common.Enums;
 
@@ -18,21 +17,27 @@ internal sealed class AccountsService : IAccountsService
 
     public async Task<Result<GetAccountDto>> GetAccountByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
-    }
+        var accountResult = await _accountsRepository.GetAccountByIdAsync(id);
+        if (accountResult.IsFailed)
+        {
+            return Result.Fail<GetAccountDto>(accountResult.Errors);
+        }
 
-    public async Task<Result<Guid>> CreateAccountAsync(CreateAccountDto accountDto)
-    {
-        throw new NotImplementedException();
+        var account = accountResult.Value;
+        var dto = new GetAccountDto(
+            Id: account.Id,
+            Email: account.Email,
+            Status: account.Status,
+            CreatedAt: account.CreatedAt,
+            UpdatedAt: account.UpdatedAt);
+
+        return Result.Ok(dto);
     }
 
     public async Task<Result> DeleteAccountAsync(Guid id)
-    {
-        throw new NotImplementedException();
-    }
+        => await _accountsRepository.DeleteAccountAsync(id);
+
 
     public async Task<Result> UpdateStatusAsync(Guid id, AccountStatus status)
-    {
-        throw new NotImplementedException();
-    }
+        => await _accountsRepository.UpdateStatusAsync(id, status);
 }

@@ -1,4 +1,5 @@
 using FluentResults;
+using ListingWebApp.Common.Constants;
 using ListingWebApp.Common.Enums;
 using ListingWebApp.Common.Errors;
 
@@ -38,17 +39,16 @@ public sealed class Account
     public static Result<Account> Create(
         string email, 
         string passwordHash, 
-        string salt, 
-        AccountStatus status)
+        string salt)
     {
-        if (string.IsNullOrWhiteSpace(email)) 
-            return Result.Fail<Account>(new ValidationError(nameof(Account), "Email is required"));
+        if (!RegexPatterns.EmailRegex().IsMatch(email)) 
+            return Result.Fail<Account>(new ValidationError(nameof(Account), "Invalid email."));
         
         if (string.IsNullOrWhiteSpace(passwordHash)) 
-            return Result.Fail<Account>( new ValidationError(nameof(Account), "Password is required"));
+            return Result.Fail<Account>( new ValidationError(nameof(Account), "Password is required."));
        
         if (string.IsNullOrWhiteSpace(salt)) 
-            return Result.Fail<Account>(new ValidationError(nameof(Account), "Salt is required"));
+            return Result.Fail<Account>(new ValidationError(nameof(Account), "Salt is required."));
         
         var now = DateTime.UtcNow;
         return Result.Ok(new Account(
@@ -56,7 +56,7 @@ public sealed class Account
             email: email,
             passwordHash: passwordHash, 
             salt: salt,
-            status: status,
+            status: AccountStatus.Unverified,
             createdAt: now,
             updatedAt: now)
         );
