@@ -1,0 +1,16 @@
+# Backend 
+
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Frontend
+node_modules/
+dist/
+.build/
+*.log
+
+# DevOps
+.env
