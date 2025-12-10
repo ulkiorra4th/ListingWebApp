@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  backend:
+    image: listing-backend
+    build:
+      context: ../backend
+      dockerfile: ListingWebApp.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      
+      ConnectionStrings__Postgres: ${PG_CONNECTION_STRING}
+      Redis__Configuration: ${REDIS_CONFIGURATION}
+      
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    container_name: listing-frontend
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:16
+    container_name: listing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: listing
+      POSTGRES_USER: listing_user
+      POSTGRES_PASSWORD: listing_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: listing-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5050:8080"
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: listing-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
