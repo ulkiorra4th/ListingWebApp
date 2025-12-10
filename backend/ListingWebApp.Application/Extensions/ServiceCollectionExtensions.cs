@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountsService, AccountsService>();
         services.AddScoped<IProfilesService, ProfilesService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<IAccountVerificationQueue, AccountVerificationQueue>();
         
         return services;
     }

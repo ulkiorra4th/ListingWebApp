@@ -51,7 +51,9 @@ public sealed class AuthController : ControllerBase
         [FromRoute] Guid userId,
         [FromBody] VerifyRequestDto dto)
     {
-        throw new NotImplementedException();
+
+        var result = await _authService.VerifyAccountAsync(userId, dto.Code);
+        return ToActionResult(result);
     }
 
     private IActionResult ToActionResult<T>(FluentResults.Result<T> result)

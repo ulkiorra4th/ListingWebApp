@@ -7,7 +7,7 @@ namespace ListingWebApp.Infrastructure.Security.Services;
 
 internal sealed class CryptographyService : ICryptographyService
 {
-    public (string Hash, string Salt) HashPassword(string password)
+    public (string Hash, string Salt) HashSecret(string password)
     {
         if (string.IsNullOrWhiteSpace(password)) return (string.Empty, string.Empty);
         
@@ -24,7 +24,7 @@ internal sealed class CryptographyService : ICryptographyService
         return (Convert.ToBase64String(hash),  Convert.ToBase64String(salt));
     }
 
-    public bool VerifyPassword(string hash, string salt, string password)
+    public bool VerifySecret(string hash, string salt, string password)
     {
         var saltBytes = Convert.FromBase64String(salt);
         var expectedHash = Convert.FromBase64String(hash);

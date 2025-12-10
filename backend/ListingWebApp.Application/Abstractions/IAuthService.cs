@@ -10,4 +10,5 @@ public interface IAuthService
     Task<Result<LoginResponseDto>> RegisterAsync(LoginRequestDto dto);
     Task<Result> LogoutAsync(Guid userId);
     Task<Result<LoginResponseDto>> RefreshAsync(Guid userId, string refreshToken);
+    Task<Result> VerifyAccountAsync(Guid accountId, string code);
 }

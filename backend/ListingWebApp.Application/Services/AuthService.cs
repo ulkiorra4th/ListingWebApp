@@ -2,9 +2,11 @@ using FluentResults;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Contracts.Infrastructure;
 using ListingWebApp.Application.Contracts.Persistence;
+using ListingWebApp.Application.Dto.Messages;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
 using ListingWebApp.Application.Models;
+using ListingWebApp.Common.Enums;
 using ListingWebApp.Common.Errors;
 
 namespace ListingWebApp.Application.Services;
@@ -12,22 +14,29 @@ namespace ListingWebApp.Application.Services;
 internal sealed class AuthService : IAuthService
 {
     private const int RefreshTokenExpiresDays = 30;
-    
+    private const int VerificationCodeLength = 6;
+
     private readonly IJwtProvider _jwtProvider;
     private readonly IAccountsRepository _accountsRepository;
     private readonly ISessionsRepository _sessionsRepository;
     private readonly ICryptographyService _cryptographyService;
+    private readonly ICacheService _cacheService;
+    private readonly IAccountVerificationQueue _accountVerificationQueue;
 
     public AuthService(
-        IJwtProvider jwtProvider, 
-        IAccountsRepository accountsRepository, 
-        ICryptographyService cryptographyService, 
-        ISessionsRepository sessionsRepository)
+        IJwtProvider jwtProvider,
+        IAccountsRepository accountsRepository,
+        ICryptographyService cryptographyService,
+        ISessionsRepository sessionsRepository,
+        ICacheService cacheService,
+        IAccountVerificationQueue accountVerificationQueue)
     {
         _jwtProvider = jwtProvider;
         _accountsRepository = accountsRepository;
         _cryptographyService = cryptographyService;
         _sessionsRepository = sessionsRepository;
+        _cacheService = cacheService;
+        _accountVerificationQueue = accountVerificationQueue;
     }
 
     public async Task<Result<LoginResponseDto>> LoginAsync(string email, string password)
@@ -39,8 +48,8 @@ internal sealed class AuthService : IAuthService
         }
 
         var account = accountResult.Value;
-        
-        var isPasswordValid = _cryptographyService.VerifyPassword(account.PasswordHash, account.Salt, password);
+
+        var isPasswordValid = _cryptographyService.VerifySecret(account.PasswordHash, account.Salt, password);
         if (!isPasswordValid)
         {
             return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Invalid credentials"));
@@ -59,15 +68,15 @@ internal sealed class AuthService : IAuthService
         {
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
-        
+
         var accessToken = _jwtProvider.GenerateToken(account);
         return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
     public async Task<Result<LoginResponseDto>> RegisterAsync(LoginRequestDto dto)
     {
-        var hashResult = _cryptographyService.HashPassword(dto.Password);
-        
+        var hashResult = _cryptographyService.HashSecret(dto.Password);
+
         var accountResult = Account.Create(dto.Email, hashResult.Hash, hashResult.Salt);
         if (accountResult.IsFailed)
         {
@@ -87,17 +96,56 @@ internal sealed class AuthService : IAuthService
         var sessionResult = await _sessionsRepository.CreateSessionAsync(
             accountResult.Value,
             refreshHash,
-            refreshExpiresAt);
+            refreshExpiresAt
+        );
 
         if (sessionResult.IsFailed)
         {
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
+
+        var verificationCode = _cryptographyService.GenerateToken(tokenLength: VerificationCodeLength);
+        var codeHashResult = _cryptographyService.HashSecret(verificationCode);
+
+        var verificationSecret = new VerificationSecretData(codeHashResult.Hash, codeHashResult.Salt);
+        var cacheCodeResult = await _cacheService.ReplaceAsync(accountResult.Value.ToString()!, verificationSecret, 10);
+        if (cacheCodeResult.IsFailed)
+        {
+            return Result.Fail<LoginResponseDto>(cacheCodeResult.Errors);
+        }
         
+        
+        await _accountVerificationQueue.QueueAsync(new AccountVerificationMessageDto(
+            dto.Email,
+            verificationCode)
+        );
+
         var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
         return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
+    public async Task<Result> VerifyAccountAsync(Guid accountId, string code)
+    {
+        var secretResult = await _cacheService.GetAsync<VerificationSecretData>(accountId.ToString());
+        if (secretResult.IsFailed)
+        {
+            return Result.Fail(secretResult.Errors);
+        }
+        
+        var verifyResult = _cryptographyService.VerifySecret(secretResult.Value.CodeHash, secretResult.Value.Salt, code);
+        if (!verifyResult)
+        {
+            return Result.Fail(new ValidationError("Invalid code"));
+        }
+
+        await _cacheService.RemoveAsync(accountId.ToString());
+        
+        var updateResult = await _accountsRepository.UpdateStatusAsync(accountId, AccountStatus.Verified);
+        return updateResult.IsFailed 
+            ? Result.Fail(updateResult.Errors) 
+            : Result.Ok();
+    }
+    
     public async Task<Result> LogoutAsync(Guid userId)
     {
         return await _sessionsRepository.DeleteSessionByAccountIdAsync(userId);
@@ -113,12 +161,14 @@ internal sealed class AuthService : IAuthService
         var session = sessionResult.Value;
         if (session.AccountId != userId)
         {
-            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session), "Session does not belong to account"));
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session),
+                "Session does not belong to account"));
         }
 
         if (!session.IsActive || session.ExpiresAt <= DateTime.UtcNow)
         {
-            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session), "Session is inactive or expired"));
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session),
+                "Session is inactive or expired"));
         }
 
         var accountResult = await _accountsRepository.GetAccountByIdAsync(userId);
@@ -151,7 +201,7 @@ internal sealed class AuthService : IAuthService
         {
             return Result.Fail<LoginResponseDto>(updateResult.Errors);
         }
-        
+
         var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
         return Result.Ok(new LoginResponseDto(accessToken, newRefreshToken));
     }

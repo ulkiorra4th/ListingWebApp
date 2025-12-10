@@ -1,3 +1,4 @@
+using ListingWebApp.Api.BackgroundServices;
 using ListingWebApp.Application.Extensions;
 using ListingWebApp.Infrastructure.Caching.Extensions;
 using ListingWebApp.Infrastructure.Email.Extensions;
@@ -38,6 +39,8 @@ builder.Services
     .AddSecurityServices(builder.Configuration)
     .AddEmailService(builder.Configuration)
     .AddCachingService(builder.Configuration);
+
+builder.Services.AddHostedService<VerificationMessageSenderBackgroundService>();
 
 var app = builder.Build();
 
