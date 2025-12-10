@@ -46,6 +46,14 @@ public sealed class AuthController : ControllerBase
         return ToActionResult(result);
     }
 
+    [HttpPost("{userId:guid}/verify")]
+    public async Task<IActionResult> VerifyAsync(
+        [FromRoute] Guid userId,
+        [FromBody] VerifyRequestDto dto)
+    {
+        throw new NotImplementedException();
+    }
+
     private IActionResult ToActionResult<T>(FluentResults.Result<T> result)
     {
         if (result.IsSuccess) return Ok(new Response<T>("success", result.Value));
