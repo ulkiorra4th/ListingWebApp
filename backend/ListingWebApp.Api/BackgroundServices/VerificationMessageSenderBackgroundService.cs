@@ -39,7 +39,7 @@ public class VerificationMessageSenderBackgroundService : BackgroundService
             {
                 try
                 {
-                    var content = _emailContentBuilder.BuildMailContent(message.VerificationCode);
+                    var content = _emailContentBuilder.BuildMailContent(message.VerificationCode, isBodyHtml: true);
                     await _emailSender.SendMailAsync(message.Email, content);
                 }
                 catch (Exception ex)

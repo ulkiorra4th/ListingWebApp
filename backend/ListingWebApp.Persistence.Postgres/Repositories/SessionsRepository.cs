@@ -34,6 +34,22 @@ internal sealed class SessionsRepository : ISessionsRepository
             : sessionResult;
     }
 
+    public async Task<Result<Session>> GetSessionByIdAsync(Guid id)
+    {
+        var sessionEntity = await _context.Sessions
+            .Include(s => s.Account)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (sessionEntity is null)
+            return Result.Fail<Session>(new NotFoundError(nameof(Session)));
+
+        var sessionResult = MapToDomain(sessionEntity);
+        return sessionResult.IsFailed
+            ? Result.Fail<Session>(sessionResult.Errors)
+            : sessionResult;
+    }
+
     public async Task<Result<Session>> GetSessionByRefreshTokenHashAsync(string refreshTokenHash)
     {
         var sessionEntity = await _context.Sessions
@@ -75,6 +91,7 @@ internal sealed class SessionsRepository : ISessionsRepository
         var sessionEntity = new SessionEntity
         {
             Id = session.Id,
+            AccountId = accountEntity.Id,
             Account = accountEntity,
             RefreshTokenHash = session.RefreshTokenHash,
             IsActive = session.IsActive,

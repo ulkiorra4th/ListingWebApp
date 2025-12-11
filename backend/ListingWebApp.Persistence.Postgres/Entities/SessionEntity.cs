@@ -4,6 +4,7 @@ public sealed class SessionEntity
 {
     public required Guid Id { get; set; }
     
+    public required Guid AccountId { get; set; }
     public required AccountEntity Account { get; set; }
     
     public required string RefreshTokenHash { get; set; } 

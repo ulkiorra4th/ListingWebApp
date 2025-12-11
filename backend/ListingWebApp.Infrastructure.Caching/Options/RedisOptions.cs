@@ -2,7 +2,7 @@
 
 public sealed record RedisOptions
 {
-    public string ConnectionString { get; init; } = null!;
-    public string KeyPrefix { get; init; } = null!;
-    public int Database { get; init; }
+    public required string ConnectionString { get; init; } 
+    public required string KeyPrefix { get; init; }
+    public required int Database { get; init; }
 }

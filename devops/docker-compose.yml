@@ -11,9 +11,25 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       
-      ConnectionStrings__Postgres: ${PG_CONNECTION_STRING}
-      Redis__Configuration: ${REDIS_CONFIGURATION}
-      
+      # ConnectionStrings
+      ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING}
+
+      # RedisOptions
+      RedisOptions__ConnectionString: ${REDIS_CONNECTION_STRING}
+      RedisOptions__KeyPrefix: ${REDIS_KEY_PREFIX}
+      RedisOptions__Database: ${REDIS_DB}
+
+      # JwtOptions
+      JwtOptions__SecretKey: ${JWT_SECRET_KEY}
+      JwtOptions__ExpiresMinutes: ${JWT_EXPIRES_MINUTES}
+
+      # EmailServiceOptions
+      EmailServiceOptions__VerificationTemplateFilePath: ${EMAIL_VERIFICATION_TEMPLATE_FILE_PATH}
+      EmailServiceOptions__SenderAddress: ${EMAIL_SENDER_ADDRESS}
+      EmailServiceOptions__DisplayName: ${EMAIL_DISPLAY_NAME}
+      EmailServiceOptions__SenderMailPassword: ${EMAIL_SENDER_MAIL_PASSWORD}
+      EmailServiceOptions__SmtpHost: ${EMAIL_SMTP_HOST}
+      EmailServiceOptions__SmtpPort: ${EMAIL_SMTP_PORT}
     depends_on:
       - postgres
       - redis
@@ -35,11 +51,11 @@ services:
     container_name: listing-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: listing
-      POSTGRES_USER: listing_user
-      POSTGRES_PASSWORD: listing_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -51,9 +67,11 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "5050:8080"
+      - "5050:80"
     depends_on:
       - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
   redis:
     image: redis:7-alpine
@@ -68,3 +86,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  pgadmin_data:

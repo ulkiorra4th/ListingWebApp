@@ -10,7 +10,8 @@ namespace ListingWebApp.Infrastructure.Email.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddEmailService(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddEmailService(this IServiceCollection services, IConfiguration configuration, 
+        string basePath)
     {
         services.Configure<EmailServiceOptions>(configuration.GetSection("EmailServiceOptions"));
 
@@ -20,7 +21,7 @@ public static class ServiceCollectionExtensions
             var config = sp.GetRequiredService<IOptions<EmailServiceOptions>>().Value;
 
             var htmlParser = sp.GetRequiredService<IEmailParser>();
-            var parseResult = htmlParser.Parse(config.VerificationTemplateFilePath);
+            var parseResult = htmlParser.Parse(Path.Combine(basePath, config.VerificationTemplateFilePath));
             if (parseResult.IsFailed)
             {
                 throw new Exception(string.Join(';', parseResult.Errors));

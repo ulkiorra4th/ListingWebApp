@@ -2,6 +2,7 @@
 using ListingWebApp.Api.Dto.Request;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Common.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListingWebApp.Api.Controllers.v1;
@@ -18,6 +19,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.GetAccountByIdAsync(id);
@@ -25,6 +27,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.DeleteAccountAsync(id);
@@ -32,6 +35,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize]
     public async Task<IActionResult> UpdateStatusAsync(
         [FromRoute] Guid id, 
         [FromBody] UpdateAccountStatusRequestDto dto)

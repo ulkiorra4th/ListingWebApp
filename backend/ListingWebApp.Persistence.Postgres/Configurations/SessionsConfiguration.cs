@@ -9,7 +9,9 @@ public sealed class SessionsConfiguration : IEntityTypeConfiguration<SessionEnti
     public void Configure(EntityTypeBuilder<SessionEntity> builder)
     {
         builder.HasKey(s => s.Id);
-        builder.HasOne(s => s.Account).WithOne(a => a.Session);
+        builder.HasOne(s => s.Account)
+            .WithOne(a => a.Session)
+            .HasForeignKey<SessionEntity>(s => s.AccountId);
         
         builder.Property(s => s.RefreshTokenHash)
             .HasMaxLength(128)
@@ -21,7 +23,5 @@ public sealed class SessionsConfiguration : IEntityTypeConfiguration<SessionEnti
         builder.Property(s => s.UpdatedAt).IsRequired();
         builder.Property(s => s.ExpiresAt).IsRequired();
         builder.Property(s => s.RevokedAt);
-
-        builder.HasIndex(s => s.Account).IsUnique();
     }
 }

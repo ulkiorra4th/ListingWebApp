@@ -4,5 +4,5 @@ namespace ListingWebApp.Application.Contracts.Infrastructure;
 
 public interface IJwtProvider
 {
-    string GenerateToken(Account account);
+    string GenerateToken(Account account, Guid sessionId);
 }

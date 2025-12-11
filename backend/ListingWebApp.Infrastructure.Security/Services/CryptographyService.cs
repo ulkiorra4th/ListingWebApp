@@ -44,6 +44,13 @@ internal sealed class CryptographyService : ICryptographyService
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         return Convert.ToBase64String(bytes);
     }
+
+    public string GenerateCode(int codeLength = 6)
+    {
+        var maxExclusive = (int)Math.Pow(10, codeLength);  
+        var value = RandomNumberGenerator.GetInt32(0, maxExclusive);
+        return value.ToString($"D{codeLength}");
+    }
     
     public string GenerateToken(int tokenLength = 64)
     {

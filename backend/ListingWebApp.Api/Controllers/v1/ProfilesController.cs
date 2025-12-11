@@ -2,6 +2,7 @@
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Common.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListingWebApp.Api.Controllers.v1;
@@ -18,6 +19,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> GetByIdAsync(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)
@@ -27,6 +29,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAllAsync([FromRoute] Guid accountId)
     {
         var result = await _profilesService.GetAllProfilesAsync(accountId);
@@ -34,6 +37,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateAsync(
         [FromRoute] Guid accountId,
         [FromBody] CreateProfileDto dto)
@@ -45,6 +49,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id,
@@ -57,6 +62,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)

@@ -19,13 +19,14 @@ internal sealed class JwtProvider : IJwtProvider
         _options = options.Value;
     }
     
-    public string GenerateToken(Account account)
+    public string GenerateToken(Account account, Guid sessionId)
     {
         Claim[] claims = 
         {
             new("accountId", account.Id.ToString()), 
             new("accountEmail", account.Email),
-            new("accountStatus", account.Status.ToString())
+            new("accountStatus", account.Status.ToString()),
+            new("sessionId", sessionId.ToString()),
         };
         
         var signingCredentials = new SigningCredentials(

@@ -16,7 +16,8 @@ internal sealed class EmailParser : IEmailParser
     {
         if (!File.Exists(filePath))
         {
-            return Result.Fail<(string Subject, string Body)>(new NotFoundError("Email template"));
+            return Result.Fail<(string Subject, string Body)>(new NotFoundError("Email template", 
+                $"currentPath: {filePath}"));
         }
 
         if (string.IsNullOrEmpty(Separator))

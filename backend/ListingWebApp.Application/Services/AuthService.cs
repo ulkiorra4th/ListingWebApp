@@ -69,8 +69,8 @@ internal sealed class AuthService : IAuthService
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
 
-        var accessToken = _jwtProvider.GenerateToken(account);
-        return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
+        var accessToken = _jwtProvider.GenerateToken(account, sessionResult.Value);
+        return Result.Ok(new LoginResponseDto(accessToken, refreshToken, accountResult.Value.Id.ToString()));
     }
 
     public async Task<Result<LoginResponseDto>> RegisterAsync(LoginRequestDto dto)
@@ -104,24 +104,23 @@ internal sealed class AuthService : IAuthService
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
 
-        var verificationCode = _cryptographyService.GenerateToken(tokenLength: VerificationCodeLength);
+        var verificationCode = _cryptographyService.GenerateCode(codeLength: VerificationCodeLength);
         var codeHashResult = _cryptographyService.HashSecret(verificationCode);
 
         var verificationSecret = new VerificationSecretData(codeHashResult.Hash, codeHashResult.Salt);
-        var cacheCodeResult = await _cacheService.ReplaceAsync(accountResult.Value.ToString()!, verificationSecret, 10);
+        var cacheCodeResult = await _cacheService.ReplaceAsync(accountResult.Value.Id.ToString(), verificationSecret, 10);
         if (cacheCodeResult.IsFailed)
         {
             return Result.Fail<LoginResponseDto>(cacheCodeResult.Errors);
         }
-        
         
         await _accountVerificationQueue.QueueAsync(new AccountVerificationMessageDto(
             dto.Email,
             verificationCode)
         );
 
-        var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
-        return Result.Ok(new LoginResponseDto(accessToken, refreshToken));
+        var accessToken = _jwtProvider.GenerateToken(accountResult.Value, sessionResult.Value);
+        return Result.Ok(new LoginResponseDto(accessToken, refreshToken, accountResult.Value.Id.ToString()));
     }
 
     public async Task<Result> VerifyAccountAsync(Guid accountId, string code)
@@ -151,7 +150,7 @@ internal sealed class AuthService : IAuthService
         return await _sessionsRepository.DeleteSessionByAccountIdAsync(userId);
     }
 
-    public async Task<Result<LoginResponseDto>> RefreshAsync(Guid userId, string refreshToken)
+    public async Task<Result<LoginResponseDto>> RefreshAsync(string refreshToken)
     {
         var refreshHash = _cryptographyService.ComputeSha256(refreshToken);
         var sessionResult = await _sessionsRepository.GetSessionByRefreshTokenHashAsync(refreshHash);
@@ -159,19 +158,13 @@ internal sealed class AuthService : IAuthService
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
 
         var session = sessionResult.Value;
-        if (session.AccountId != userId)
-        {
-            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session),
-                "Session does not belong to account"));
-        }
-
         if (!session.IsActive || session.ExpiresAt <= DateTime.UtcNow)
         {
             return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Session),
                 "Session is inactive or expired"));
         }
 
-        var accountResult = await _accountsRepository.GetAccountByIdAsync(userId);
+        var accountResult = await _accountsRepository.GetAccountByIdAsync(session.AccountId);
         if (accountResult.IsFailed)
         {
             return Result.Fail<LoginResponseDto>(accountResult.Errors);
@@ -202,7 +195,7 @@ internal sealed class AuthService : IAuthService
             return Result.Fail<LoginResponseDto>(updateResult.Errors);
         }
 
-        var accessToken = _jwtProvider.GenerateToken(accountResult.Value);
-        return Result.Ok(new LoginResponseDto(accessToken, newRefreshToken));
+        var accessToken = _jwtProvider.GenerateToken(accountResult.Value, sessionResult.Value.Id);
+        return Result.Ok(new LoginResponseDto(accessToken, newRefreshToken, accountResult.Value.Id.ToString()));
     }
 }

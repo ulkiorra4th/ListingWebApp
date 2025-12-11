@@ -1,8 +1,10 @@
-﻿using ListingWebApp.Api.Dto.Common;
+﻿using System.Security.Claims;
+using ListingWebApp.Api.Dto.Common;
 using ListingWebApp.Api.Dto.Request;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Common.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListingWebApp.Api.Controllers.v1;
@@ -19,40 +21,91 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<IActionResult> RegisterAsync([FromBody] LoginRequestDto dto)
     {
         var result = await _authService.RegisterAsync(dto);
+        if (result.IsFailed)
+        {
+            return ToActionResult(result);
+        }
+        
+        Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
+        {
+            Secure = false,
+            SameSite = SameSiteMode.None,
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
+        });
+        
         return ToActionResult(result);
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto dto)
     {
         var result = await _authService.LoginAsync(dto.Email, dto.Password);
+        if (result.IsFailed)
+        {
+            return ToActionResult(result);
+        }
+        
+        Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
+        {
+            Secure = false,
+            SameSite = SameSiteMode.None,
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
+        });
+        
         return ToActionResult(result);
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> RefreshAsync([FromBody] RefreshRequest request)
+    [AllowAnonymous]
+    public async Task<IActionResult> RefreshAsync()
     {
-        var result = await _authService.RefreshAsync(request.UserId, request.RefreshToken);
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken) ||
+            string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Unauthorized();
+        }
+        
+        var result = await _authService.RefreshAsync(refreshToken);
         return ToActionResult(result);
     }
 
-    [HttpPost("{userId:guid}/logout")]
-    public async Task<IActionResult> LogoutAsync([FromRoute] Guid userId)
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> LogoutAsync()
     {
-        var result = await _authService.LogoutAsync(userId);
+        var accountId = User.FindFirstValue("accountId");
+        if (!Guid.TryParse(accountId, out var accountGuid))
+        {
+            return Unauthorized();
+        }
+        
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            Secure = false,
+            SameSite = SameSiteMode.None
+        });
+        
+        var result = await _authService.LogoutAsync(accountGuid);
         return ToActionResult(result);
     }
 
-    [HttpPost("{userId:guid}/verify")]
+    [HttpPost("verify")]
+    [Authorize]
     public async Task<IActionResult> VerifyAsync(
-        [FromRoute] Guid userId,
         [FromBody] VerifyRequestDto dto)
     {
-
-        var result = await _authService.VerifyAccountAsync(userId, dto.Code);
+        var accountId = User.FindFirstValue("accountId");
+        if (!Guid.TryParse(accountId, out var accountGuid))
+        {
+            return Unauthorized();
+        }
+        
+        var result = await _authService.VerifyAccountAsync(accountGuid, dto.Code);
         return ToActionResult(result);
     }
 

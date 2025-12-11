@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentResults.Extensions.AspNetCore" Version="0.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.22" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19"/>
         <PackageReference Include="Serilog" Version="4.3.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
@@ -29,6 +30,12 @@
       <ProjectReference Include="..\ListingWebApp.Infrastructure.Email\ListingWebApp.Infrastructure.Email.csproj" />
       <ProjectReference Include="..\ListingWebApp.Infrastructure.Security\ListingWebApp.Infrastructure.Security.csproj" />
       <ProjectReference Include="..\ListingWebApp.Persistence.Postgres\ListingWebApp.Persistence.Postgres.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\verification_template.html">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

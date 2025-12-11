@@ -67,7 +67,8 @@ internal sealed class AccountsRepository : IAccountsRepository
             UpdatedAt = account.UpdatedAt
         };
 
-        await _context.Accounts.AddAsync(accountEntity);
+        _context.Accounts.Add(accountEntity);
+        await _context.SaveChangesAsync();
         return Result.Ok(accountEntity.Id);
     }
 
@@ -92,7 +93,8 @@ internal sealed class AccountsRepository : IAccountsRepository
             UpdatedAt = profile.UpdatedAt
         };
 
-        await _context.Profiles.AddAsync(profileEntity);
+        _context.Profiles.Add(profileEntity);
+        await _context.SaveChangesAsync();
         return Result.Ok(profileEntity.Id);
     }
 

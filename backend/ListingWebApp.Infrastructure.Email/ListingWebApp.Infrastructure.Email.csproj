@@ -17,10 +17,4 @@
       <ProjectReference Include="..\ListingWebApp.Common\ListingWebApp.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="Resources\verification_template.html">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
 </Project>
