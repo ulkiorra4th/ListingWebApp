@@ -30,6 +30,14 @@ services:
       EmailServiceOptions__SenderMailPassword: ${EMAIL_SENDER_MAIL_PASSWORD}
       EmailServiceOptions__SmtpHost: ${EMAIL_SMTP_HOST}
       EmailServiceOptions__SmtpPort: ${EMAIL_SMTP_PORT}
+      
+      S3Options__REGION: ${MINIO_REGION}
+      S3Options__ENDPOINT: ${S3_OPTIONS_ENDPOINT}
+      S3Options__ACCESSKEY: ${S3_OPTIONS_ACCESSKEY}
+      S3Options__SECRETKEY: ${S3_OPTIONS_SECRETKEY}
+      S3Options__BUCKET: ${S3_OPTIONS_BUCKET}
+      S3Options__USESSL: ${S3_OPTIONS_USESSL}
+      
     depends_on:
       - postgres
       - redis
@@ -89,12 +97,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_REGION: ${MINIO_REGION:-us-east-1}
-      S3_OPTIONS_ENDPOINT: ${S3_OPTIONS_ENDPOINT:-http://minio:9000}
-      S3_OPTIONS_ACCESSKEY: ${S3_OPTIONS_ACCESSKEY:-${MINIO_ROOT_USER}}
-      S3_OPTIONS_SECRETKEY: ${S3_OPTIONS_SECRETKEY:-${MINIO_ROOT_PASSWORD}}
-      S3_OPTIONS_BUCKET: ${S3_OPTIONS_BUCKET:-listing-media}
-      S3_OPTIONS_USESSL: ${S3_OPTIONS_USESSL:-false}
     volumes:
       - minio_data:/data
     ports:
