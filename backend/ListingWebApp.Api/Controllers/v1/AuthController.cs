@@ -4,6 +4,7 @@ using ListingWebApp.Api.Dto.Request;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Common.Errors;
+using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,17 +28,17 @@ public sealed class AuthController : ControllerBase
         var result = await _authService.RegisterAsync(dto);
         if (result.IsFailed)
         {
-            return ToActionResult(result);
+            return result.ToActionResult();
         }
-        
+
         Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
         {
             Secure = false,
             SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UtcNow.AddDays(30)
         });
-        
-        return ToActionResult(result);
+
+        return result.ToActionResult();
     }
 
     [HttpPost("login")]
@@ -47,17 +48,17 @@ public sealed class AuthController : ControllerBase
         var result = await _authService.LoginAsync(dto.Email, dto.Password);
         if (result.IsFailed)
         {
-            return ToActionResult(result);
+            return result.ToActionResult();
         }
-        
+
         Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
         {
             Secure = false,
             SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UtcNow.AddDays(30)
         });
-        
-        return ToActionResult(result);
+
+        return result.ToActionResult();
     }
 
     [HttpPost("refresh")]
@@ -69,9 +70,9 @@ public sealed class AuthController : ControllerBase
         {
             return Unauthorized();
         }
-        
+
         var result = await _authService.RefreshAsync(refreshToken);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpPost("logout")]
@@ -83,15 +84,15 @@ public sealed class AuthController : ControllerBase
         {
             return Unauthorized();
         }
-        
+
         Response.Cookies.Delete("refreshToken", new CookieOptions
         {
             Secure = false,
             SameSite = SameSiteMode.None
         });
-        
+
         var result = await _authService.LogoutAsync(accountGuid);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpPost("verify")]
@@ -104,28 +105,8 @@ public sealed class AuthController : ControllerBase
         {
             return Unauthorized();
         }
-        
+
         var result = await _authService.VerifyAccountAsync(accountGuid, dto.Code);
-        return ToActionResult(result);
-    }
-
-    private IActionResult ToActionResult<T>(FluentResults.Result<T> result)
-    {
-        if (result.IsSuccess) return Ok(new Response<T>("success", result.Value));
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty, string.Join("; ", result.Errors.Select(e => e.Message))));
-    }
-
-    private IActionResult ToActionResult(FluentResults.Result result)
-    {
-        if (result.IsSuccess) return NoContent();
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty, string.Join("; ", result.Errors.Select(e => e.Message))));
+        return result.ToActionResult();
     }
 }

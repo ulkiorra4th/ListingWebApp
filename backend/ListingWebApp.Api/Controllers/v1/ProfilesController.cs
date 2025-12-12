@@ -2,6 +2,7 @@
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Common.Errors;
+using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +26,7 @@ public sealed class ProfilesController : ControllerBase
         [FromRoute] Guid id)
     {
         var result = await _profilesService.GetProfileByIdAsync(accountId, id);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpGet]
@@ -33,7 +34,7 @@ public sealed class ProfilesController : ControllerBase
     public async Task<IActionResult> GetAllAsync([FromRoute] Guid accountId)
     {
         var result = await _profilesService.GetAllProfilesAsync(accountId);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpPost]
@@ -45,7 +46,7 @@ public sealed class ProfilesController : ControllerBase
         var request = dto with { AccountId = accountId };
 
         var result = await _profilesService.CreateProfileAsync(request);
-        return ToActionResult(result);
+        return result.ToActionResult(true);
     }
 
     [HttpPut("{id:guid}")]
@@ -58,7 +59,7 @@ public sealed class ProfilesController : ControllerBase
         var request = dto with { Id = id, AccountId = accountId };
 
         var result = await _profilesService.UpdateProfileAsync(request);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpDelete("{id:guid}")]
@@ -68,28 +69,6 @@ public sealed class ProfilesController : ControllerBase
         [FromRoute] Guid id)
     {
         var result = await _profilesService.DeleteProfileAsync(id);
-        return ToActionResult(result);
-    }
-
-    private IActionResult ToActionResult<T>(FluentResults.Result<T> result)
-    {
-        if (result.IsSuccess) return Ok(new Response<T>("success", result.Value));
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty,
-            string.Join("; ", result.Errors.Select(e => e.Message))));
-    }
-
-    private IActionResult ToActionResult(FluentResults.Result result)
-    {
-        if (result.IsSuccess) return NoContent();
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty,
-            string.Join("; ", result.Errors.Select(e => e.Message))));
+        return result.ToActionResult();
     }
 }

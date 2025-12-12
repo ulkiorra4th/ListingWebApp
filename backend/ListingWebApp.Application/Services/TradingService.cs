@@ -103,7 +103,7 @@ internal sealed class TradingService : ITradingService
                 listingId: listing.Id,
                 currencyCode: listing.CurrencyCode,
                 amount: listing.PriceAmount,
-                isSuspicious: dto.IsSuspicious,
+                isSuspicious: false,
                 transactionDate: now);
 
             if (transactionResult.IsFailed)

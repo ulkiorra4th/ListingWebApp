@@ -2,6 +2,7 @@
 using ListingWebApp.Api.Dto.Request;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Common.Errors;
+using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,7 @@ public sealed class AccountsController : ControllerBase
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.GetAccountByIdAsync(id);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpDelete("{id:guid}")]
@@ -31,7 +32,7 @@ public sealed class AccountsController : ControllerBase
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.DeleteAccountAsync(id);
-        return ToActionResult(result);
+        return result.ToActionResult();
     }
 
     [HttpPatch("{id:guid}/status")]
@@ -41,26 +42,6 @@ public sealed class AccountsController : ControllerBase
         [FromBody] UpdateAccountStatusRequestDto dto)
     {
         var result = await _accountsService.UpdateStatusAsync(id, dto.Status);
-        return ToActionResult(result);
-    }
-
-    private IActionResult ToActionResult<T>(FluentResults.Result<T> result)
-    {
-        if (result.IsSuccess) return Ok(new Response<T>("success", result.Value));
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty, string.Join("; ", result.Errors.Select(e => e.Message))));
-    }
-
-    private IActionResult ToActionResult(FluentResults.Result result)
-    {
-        if (result.IsSuccess) return NoContent();
-
-        if (result.Errors.Any(e => e is NotFoundError))
-            return NotFound(new Response<string>("error", string.Empty, result.Errors.First().Message));
-
-        return BadRequest(new Response<string>("error", string.Empty, string.Join("; ", result.Errors.Select(e => e.Message))));
+        return result.ToActionResult();
     }
 }
