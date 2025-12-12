@@ -7,4 +7,5 @@ public interface IItemEntriesRepository
 {
     Task<Result<ItemEntry>> GetByIdAsync(Guid id);
     Task<Result<Guid>> CreateAsync(ItemEntry entry);
+    Task<Result> TransferOwnershipAsync(Guid entryId, Guid newOwnerId);
 }

@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IListingsService, ListingsService>();
         services.AddScoped<ITradeTransactionsService, TradeTransactionsService>();
         services.AddScoped<IWalletsService, WalletsService>();
+        services.AddScoped<ITradingService, TradingService>();
         services.AddSingleton<IAccountVerificationQueue, AccountVerificationQueue>();
         
         return services;

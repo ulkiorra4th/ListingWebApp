@@ -37,7 +37,7 @@ internal sealed class WalletsRepository : IWalletsRepository
             return Result.Fail(new NotFoundError(nameof(Currency)));
 
         var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == wallet.AccountId && a.Status == AccountStatus.Verified);
+            .FirstOrDefaultAsync(a => a.Id == wallet.AccountId && a.Status != AccountStatus.Deleted);
         if (account is null)
             return Result.Fail(new NotFoundError(nameof(Account)));
 
@@ -70,6 +70,19 @@ internal sealed class WalletsRepository : IWalletsRepository
 
         await _context.SaveChangesAsync();
         return Result.Ok();
+    }
+
+    public async Task<Result> UpdateBalanceAsync(Guid accountId, string currencyCode, decimal balance, DateTime? lastTransactionDate)
+    {
+        var updated = await _context.Wallets
+            .Where(w => w.AccountId == accountId && w.CurrencyCode == currencyCode)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(w => w.Balance, balance)
+                .SetProperty(w => w.LastTransactionDate, lastTransactionDate));
+
+        return updated == 0
+            ? Result.Fail(new NotFoundError(nameof(Wallet)))
+            : Result.Ok();
     }
 
     public async Task<Result> IncreaseBalanceAsync(Guid accountId, string currencyCode, decimal amount, DateTime transactionDate)

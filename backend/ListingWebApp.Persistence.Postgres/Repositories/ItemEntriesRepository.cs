@@ -57,6 +57,24 @@ internal sealed class ItemEntriesRepository : IItemEntriesRepository
         return Result.Ok(entity.Id);
     }
 
+    public async Task<Result> TransferOwnershipAsync(Guid entryId, Guid newOwnerId)
+    {
+        var entry = await _context.ItemEntries
+            .Include(e => e.Owner)
+            .FirstOrDefaultAsync(e => e.Id == entryId);
+        if (entry is null)
+            return Result.Fail(new NotFoundError(nameof(ItemEntry)));
+
+        var newOwner = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == newOwnerId && a.Status != AccountStatus.Deleted);
+        if (newOwner is null)
+            return Result.Fail(new NotFoundError(nameof(Account)));
+
+        entry.Owner = newOwner;
+        await _context.SaveChangesAsync();
+        return Result.Ok();
+    }
+
     private static Result<ItemEntry> MapToDomain(ItemEntryEntity entity) =>
         ItemEntry.Create(
             id: entity.Id,
