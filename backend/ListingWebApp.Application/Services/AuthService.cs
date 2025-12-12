@@ -6,6 +6,7 @@ using ListingWebApp.Application.Dto.Messages;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
 using ListingWebApp.Application.Models;
+using ListingWebApp.Common.Constants;
 using ListingWebApp.Common.Enums;
 using ListingWebApp.Common.Errors;
 
@@ -75,6 +76,11 @@ internal sealed class AuthService : IAuthService
 
     public async Task<Result<LoginResponseDto>> RegisterAsync(LoginRequestDto dto)
     {
+        if (!RegexPatterns.PasswordRegex().IsMatch(dto.Password))
+        {
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Bad password."));
+        }
+        
         var hashResult = _cryptographyService.HashSecret(dto.Password);
 
         var accountResult = Account.Create(dto.Email, hashResult.Hash, hashResult.Salt);
