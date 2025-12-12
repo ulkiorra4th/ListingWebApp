@@ -1,7 +1,9 @@
+using System.IO;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListingWebApp.Api.Controllers.v1;
@@ -43,10 +45,22 @@ public sealed class CurrenciesController : ControllerBase
 
     [HttpPatch("{code}/icon")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateIconAsync([FromRoute] string code, [FromBody] UpdateCurrencyIconDto dto)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdateIconAsync(
+        [FromRoute] string code, 
+        [FromForm] IFormFile? file, 
+        CancellationToken ct)
     {
-        var request = dto with { CurrencyCode = code };
-        var result = await _currenciesService.UpdateIconKeyAsync(request);
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest("Icon file is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var extension = Path.GetExtension(file.FileName);
+        var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
+        
+        var result = await _currenciesService.UpdateIconAsync(code, stream, extension, contentType, ct);
         return result.ToActionResult();
     }
 }

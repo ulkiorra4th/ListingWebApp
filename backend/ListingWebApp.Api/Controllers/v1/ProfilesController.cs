@@ -1,7 +1,5 @@
-﻿using ListingWebApp.Api.Dto.Common;
-using ListingWebApp.Application.Abstractions;
+﻿using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
-using ListingWebApp.Common.Errors;
 using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +67,28 @@ public sealed class ProfilesController : ControllerBase
         [FromRoute] Guid id)
     {
         var result = await _profilesService.DeleteProfileAsync(id);
+        return result.ToActionResult();
+    }
+
+    [HttpPatch("{id:guid}/icon")]
+    [Authorize(Roles = "User,Admin")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdateIconAsync(
+        [FromRoute] Guid accountId,
+        [FromRoute] Guid id,
+        [FromForm] IFormFile? file,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest("Icon file is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var extension = Path.GetExtension(file.FileName);
+        var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
+
+        var result = await _profilesService.UpdateIconAsync(accountId, id, stream, extension, contentType, ct);
         return result.ToActionResult();
     }
 }

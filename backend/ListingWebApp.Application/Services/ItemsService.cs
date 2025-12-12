@@ -1,5 +1,6 @@
 using FluentResults;
 using ListingWebApp.Application.Abstractions;
+using ListingWebApp.Application.Contracts.Infrastructure;
 using ListingWebApp.Application.Contracts.Persistence;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
@@ -10,10 +11,12 @@ namespace ListingWebApp.Application.Services;
 internal sealed class ItemsService : IItemsService
 {
     private readonly IItemsRepository _itemsRepository;
+    private readonly IObjectStorageService _objectStorageService;
 
-    public ItemsService(IItemsRepository itemsRepository)
+    public ItemsService(IItemsRepository itemsRepository, IObjectStorageService objectStorageService)
     {
         _itemsRepository = itemsRepository;
+        _objectStorageService = objectStorageService;
     }
 
     public async Task<Result<GetItemDto>> GetByIdAsync(Guid id)
@@ -40,8 +43,37 @@ internal sealed class ItemsService : IItemsService
             : await _itemsRepository.CreateAsync(itemResult.Value);
     }
 
-    public async Task<Result> UpdateIconKeyAsync(UpdateItemIconDto dto)
-        => await _itemsRepository.UpdateIconKeyAsync(dto.ItemId, dto.IconKey);
+    public async Task<Result> UpdateIconAsync(
+        Guid itemId,
+        Stream? content,
+        string fileExtension,
+        string contentType,
+        CancellationToken ct = default)
+    {
+        if (content is null)
+        {
+            return Result.Fail("Icon content is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileExtension))
+        {
+            return Result.Fail("File extension is required.");
+        }
+
+        var normalizedExtension = fileExtension.StartsWith(".", StringComparison.Ordinal)
+            ? fileExtension
+            : $".{fileExtension}";
+
+        var iconKey = $"items/{itemId}{normalizedExtension}";
+
+        var uploadResult = await _objectStorageService.UploadAsync(iconKey, content, contentType, ct);
+        if (uploadResult.IsFailed)
+        {
+            return Result.Fail(uploadResult.Errors);
+        }
+
+        return await _itemsRepository.UpdateIconKeyAsync(itemId, iconKey);
+    }
 
     private static GetItemDto MapToDto(Item item) =>
         new(

@@ -12,4 +12,11 @@ public interface IProfilesService
     Task<Result> DeleteProfileAsync(Guid id);
     Task<Result> UpdateProfileAsync(UpdateProfileDto profile);
     Task<Result<List<GetProfileDto>>> GetAllProfilesAsync(Guid accountId);
+    Task<Result> UpdateIconAsync(
+        Guid accountId,
+        Guid profileId,
+        Stream content,
+        string fileExtension,
+        string contentType,
+        CancellationToken ct = default);
 }

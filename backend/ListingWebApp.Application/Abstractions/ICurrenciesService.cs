@@ -9,5 +9,10 @@ public interface ICurrenciesService
     Task<Result<GetCurrencyDto>> GetByCodeAsync(string currencyCode);
     Task<Result<List<GetCurrencyDto>>> GetAllAsync();
     Task<Result> AddAsync(CreateCurrencyDto dto);
-    Task<Result> UpdateIconKeyAsync(UpdateCurrencyIconDto dto);
+    Task<Result> UpdateIconAsync(
+        string currencyCode,
+        Stream? content,
+        string fileExtension,
+        string contentType,
+        CancellationToken ct = default);
 }

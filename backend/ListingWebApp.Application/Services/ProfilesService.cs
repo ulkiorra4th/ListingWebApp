@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using FluentResults;
 using ListingWebApp.Application.Abstractions;
+using ListingWebApp.Application.Contracts.Infrastructure;
 using ListingWebApp.Application.Contracts.Persistence;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
@@ -12,10 +13,12 @@ namespace ListingWebApp.Application.Services;
 internal sealed class ProfilesService : IProfilesService
 {
     private readonly IProfilesRepository _profilesRepository;
+    private readonly IObjectStorageService _objectStorageService;
 
-    public ProfilesService(IProfilesRepository profilesRepository)
+    public ProfilesService(IProfilesRepository profilesRepository, IObjectStorageService objectStorageService)
     {
         _profilesRepository = profilesRepository;
+        _objectStorageService = objectStorageService;
     }
 
     public async Task<Result<GetProfileDto>> GetProfileByIdAsync(Guid accountId, Guid id)
@@ -92,6 +95,39 @@ internal sealed class ProfilesService : IProfilesService
 
         var dtos = profilesResult.Value.Select(MapToDto).ToList();
         return Result.Ok(dtos);
+    }
+
+    public async Task<Result> UpdateIconAsync(
+        Guid accountId,
+        Guid profileId,
+        Stream? content,
+        string fileExtension,
+        string contentType,
+        CancellationToken ct = default)
+    {
+        if (content is null)
+        {
+            return Result.Fail("Icon content is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileExtension))
+        {
+            return Result.Fail("File extension is required.");
+        }
+
+        var normalizedExtension = fileExtension.StartsWith(".", StringComparison.Ordinal)
+            ? fileExtension
+            : $".{fileExtension}";
+
+        var iconKey = $"profiles/{profileId}{normalizedExtension}";
+
+        var uploadResult = await _objectStorageService.UploadAsync(iconKey, content, contentType, ct);
+        if (uploadResult.IsFailed)
+        {
+            return Result.Fail(uploadResult.Errors);
+        }
+
+        return await _profilesRepository.UpdateIconKeyAsync(accountId, profileId, iconKey);
     }
 
     private static GetProfileDto MapToDto(Profile profile) =>

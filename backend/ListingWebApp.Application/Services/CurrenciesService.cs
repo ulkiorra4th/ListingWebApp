@@ -1,5 +1,6 @@
 using FluentResults;
 using ListingWebApp.Application.Abstractions;
+using ListingWebApp.Application.Contracts.Infrastructure;
 using ListingWebApp.Application.Contracts.Persistence;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Application.Dto.Response;
@@ -10,10 +11,12 @@ namespace ListingWebApp.Application.Services;
 internal sealed class CurrenciesService : ICurrenciesService
 {
     private readonly ICurrenciesRepository _currenciesRepository;
+    private readonly IObjectStorageService _objectStorageService;
 
-    public CurrenciesService(ICurrenciesRepository currenciesRepository)
+    public CurrenciesService(ICurrenciesRepository currenciesRepository, IObjectStorageService objectStorageService)
     {
         _currenciesRepository = currenciesRepository;
+        _objectStorageService = objectStorageService;
     }
 
     public async Task<Result<GetCurrencyDto>> GetByCodeAsync(string currencyCode)
@@ -50,8 +53,37 @@ internal sealed class CurrenciesService : ICurrenciesService
             : await _currenciesRepository.AddAsync(currencyResult.Value);
     }
 
-    public async Task<Result> UpdateIconKeyAsync(UpdateCurrencyIconDto dto)
-        => await _currenciesRepository.UpdateIconKeyAsync(dto.CurrencyCode, dto.IconKey);
+    public async Task<Result> UpdateIconAsync(
+        string currencyCode,
+        Stream? content,
+        string fileExtension,
+        string contentType,
+        CancellationToken ct = default)
+    {
+        if (content is null)
+        {
+            return Result.Fail("Icon content is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileExtension))
+        {
+            return Result.Fail("File extension is required.");
+        }
+
+        var normalizedExtension = fileExtension.StartsWith(".", StringComparison.Ordinal)
+            ? fileExtension
+            : $".{fileExtension}";
+
+        var iconKey = $"currencies/{currencyCode}{normalizedExtension}";
+
+        var uploadResult = await _objectStorageService.UploadAsync(iconKey, content, contentType, ct);
+        if (uploadResult.IsFailed)
+        {
+            return Result.Fail(uploadResult.Errors);
+        }
+
+        return await _currenciesRepository.UpdateIconKeyAsync(currencyCode, iconKey);
+    }
 
     private static GetCurrencyDto MapToDto(Currency currency) =>
         new(
