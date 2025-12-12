@@ -7,6 +7,5 @@ public sealed record UpdateProfileDto(
     Guid AccountId,
     string Nickname,
     int Age,
-    string? IconKey,
     LanguageCode LanguageCode,
     CountryCode CountryCode);

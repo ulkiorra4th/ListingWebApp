@@ -47,7 +47,6 @@ internal sealed class ProfilesService : IProfilesService
             accountId: profile.AccountId,
             nickname: profile.Nickname,
             age: profile.Age,
-            iconKey: profile.IconKey,
             languageCode: profile.LanguageCode,
             countryCode: profile.CountryCode);
 
@@ -74,7 +73,7 @@ internal sealed class ProfilesService : IProfilesService
             accountId: profile.AccountId,
             nickname: profile.Nickname,
             age: profile.Age,
-            iconKey: profile.IconKey,
+            iconKey: existingProfileResult.Value.IconKey,
             languageCode: profile.LanguageCode,
             countryCode: profile.CountryCode,
             createdAt: existingProfileResult.Value.CreatedAt,

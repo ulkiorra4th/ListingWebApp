@@ -45,7 +45,6 @@ public sealed class Profile
         Guid accountId,
         string nickname,
         int age,
-        string? iconKey,
         LanguageCode languageCode,
         CountryCode countryCode)
     {
@@ -64,7 +63,7 @@ public sealed class Profile
             accountId: accountId,
             nickname: nickname,
             age: age,
-            iconKey: iconKey,
+            iconKey: string.Empty,
             languageCode: languageCode,
             countryCode: countryCode,
             createdAt: now,

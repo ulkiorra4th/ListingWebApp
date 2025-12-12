@@ -1,9 +1,7 @@
 ﻿using System.Security.Claims;
-using ListingWebApp.Api.Dto.Common;
 using ListingWebApp.Api.Dto.Request;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
-using ListingWebApp.Common.Errors;
 using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,9 +1,7 @@
-using System.IO;
 using ListingWebApp.Application.Abstractions;
 using ListingWebApp.Application.Dto.Request;
 using ListingWebApp.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListingWebApp.Api.Controllers.v1;
