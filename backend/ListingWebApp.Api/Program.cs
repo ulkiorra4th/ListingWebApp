@@ -7,6 +7,7 @@ using ListingWebApp.Infrastructure.Caching.Extensions;
 using ListingWebApp.Infrastructure.Email.Extensions;
 using ListingWebApp.Infrastructure.Security.Extensions;
 using ListingWebApp.Infrastructure.Security.Options;
+using ListingWebApp.Infrastructure.Storage.Extensions;
 using ListingWebApp.Persistence.Postgres.Connection;
 using ListingWebApp.Persistence.Postgres.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,7 +47,8 @@ builder.Services
     .AddRepositories(builder.Configuration.GetConnectionString("Postgres")!)
     .AddSecurityServices(builder.Configuration)
     .AddEmailService(builder.Configuration, builder.Environment.ContentRootPath)
-    .AddCachingService(builder.Configuration);
+    .AddCachingService(builder.Configuration)
+    .AddObjectStorage(builder.Configuration);
 
 builder.Services.AddHostedService<VerificationMessageSenderBackgroundService>();
 

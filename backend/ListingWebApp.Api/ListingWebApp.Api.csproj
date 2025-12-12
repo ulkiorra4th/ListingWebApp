@@ -33,6 +33,7 @@
       <ProjectReference Include="..\ListingWebApp.Infrastructure.Caching\ListingWebApp.Infrastructure.Caching.csproj" />
       <ProjectReference Include="..\ListingWebApp.Infrastructure.Email\ListingWebApp.Infrastructure.Email.csproj" />
       <ProjectReference Include="..\ListingWebApp.Infrastructure.Security\ListingWebApp.Infrastructure.Security.csproj" />
+      <ProjectReference Include="..\ListingWebApp.Infrastructure.Storage\ListingWebApp.Infrastructure.Storage.csproj" />
       <ProjectReference Include="..\ListingWebApp.Persistence.Postgres\ListingWebApp.Persistence.Postgres.csproj" />
     </ItemGroup>
 
