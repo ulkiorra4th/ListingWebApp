@@ -27,6 +27,7 @@ internal sealed class JwtProvider : IJwtProvider
             new("accountEmail", account.Email),
             new("accountStatus", account.Status.ToString()),
             new("sessionId", sessionId.ToString()),
+            new(ClaimTypes.Role, account.Role.ToString())
         };
         
         var signingCredentials = new SigningCredentials(

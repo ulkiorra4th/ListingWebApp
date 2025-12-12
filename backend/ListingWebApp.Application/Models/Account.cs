@@ -14,6 +14,7 @@ public sealed class Account
     public string Salt { get; private set; }
     
     public AccountStatus Status { get; private set; }
+    public AccountRole Role { get; private set; }
     
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -24,6 +25,7 @@ public sealed class Account
         string passwordHash, 
         string salt, 
         AccountStatus status, 
+        AccountRole role,
         DateTime createdAt,
         DateTime updatedAt)
     {
@@ -32,6 +34,7 @@ public sealed class Account
         PasswordHash = passwordHash;
         Salt = salt;
         Status = status;
+        Role = role;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
     }
@@ -56,6 +59,7 @@ public sealed class Account
             email: email,
             passwordHash: passwordHash, 
             salt: salt,
+            role: AccountRole.User,
             status: AccountStatus.Unverified,
             createdAt: now,
             updatedAt: now)
@@ -67,6 +71,7 @@ public sealed class Account
         string email,
         string passwordHash,
         string salt,
+        AccountRole role,
         AccountStatus status,
         DateTime createdAt,
         DateTime updatedAt)
@@ -76,6 +81,7 @@ public sealed class Account
             email: email, 
             passwordHash: passwordHash, 
             salt: salt, 
+            role: role,
             status: status, 
             createdAt: createdAt,
             updatedAt: updatedAt));

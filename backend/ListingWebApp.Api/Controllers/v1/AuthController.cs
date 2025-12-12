@@ -75,7 +75,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> LogoutAsync()
     {
         var accountId = User.FindFirstValue("accountId");
@@ -95,7 +95,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("verify")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> VerifyAsync(
         [FromBody] VerifyRequestDto dto)
     {

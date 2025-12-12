@@ -7,9 +7,11 @@ using ListingWebApp.Infrastructure.Caching.Extensions;
 using ListingWebApp.Infrastructure.Email.Extensions;
 using ListingWebApp.Infrastructure.Security.Extensions;
 using ListingWebApp.Infrastructure.Security.Options;
+using ListingWebApp.Persistence.Postgres.Connection;
 using ListingWebApp.Persistence.Postgres.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
@@ -65,7 +67,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false,
             ValidateAudience = false,
 
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            
+            RoleClaimType = ClaimTypes.Role
         };
         
         options.Events = new JwtBearerEvents
@@ -109,6 +113,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<PostgresDbContext>();
+        await db.Database.MigrateAsync();
+    }
 }
 
 app.UseCors("Frontend");

@@ -19,7 +19,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)
@@ -29,7 +29,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetAllAsync([FromRoute] Guid accountId)
     {
         var result = await _profilesService.GetAllProfilesAsync(accountId);
@@ -37,7 +37,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> CreateAsync(
         [FromRoute] Guid accountId,
         [FromBody] CreateProfileDto dto)
@@ -49,7 +49,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> Update(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id,
@@ -62,7 +62,7 @@ public sealed class ProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> Delete(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ListingWebApp.Persistence.Postgres.Connection;
 
-internal sealed class PostgresDbContext : DbContext
+public sealed class PostgresDbContext : DbContext
 {
     public DbSet<AccountEntity> Accounts { get; set; }
     public DbSet<ProfileEntity> Profiles { get; set; }
@@ -11,7 +11,7 @@ internal sealed class PostgresDbContext : DbContext
 
     public PostgresDbContext(DbContextOptions<PostgresDbContext> options) : base(options)
     {
-        Database.EnsureCreated();
+        // Database.EnsureCreated();
     }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)

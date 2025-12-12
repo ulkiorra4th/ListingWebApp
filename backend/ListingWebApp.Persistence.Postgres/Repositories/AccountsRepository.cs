@@ -31,6 +31,7 @@ internal sealed class AccountsRepository : IAccountsRepository
             email: account.Email,
             passwordHash: account.PasswordHash,
             salt:  account.Salt,
+            role: account.Role,
             status: account.Status,
             createdAt: account.CreatedAt,
             updatedAt: account.UpdatedAt);
@@ -49,6 +50,7 @@ internal sealed class AccountsRepository : IAccountsRepository
             email: account.Email,
             passwordHash: account.PasswordHash,
             salt:  account.Salt,
+            role: account.Role,
             status: account.Status,
             createdAt: account.CreatedAt,
             updatedAt: account.UpdatedAt);
@@ -62,6 +64,7 @@ internal sealed class AccountsRepository : IAccountsRepository
             Email = account.Email,
             PasswordHash = account.PasswordHash,
             Salt = account.Salt,
+            Role = account.Role,
             Status = account.Status,
             CreatedAt = account.CreatedAt,
             UpdatedAt = account.UpdatedAt

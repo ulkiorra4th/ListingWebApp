@@ -26,6 +26,7 @@ public sealed class AccountsConfiguration : IEntityTypeConfiguration<AccountEnti
         builder.Property(a => a.CreatedAt).IsRequired();
         builder.Property(a => a.UpdatedAt).IsRequired();
         builder.Property(a => a.Status).IsRequired();
+        builder.Property(a => a.Role).IsRequired();
         
         builder.HasIndex(a => a.Email).IsUnique();
     }

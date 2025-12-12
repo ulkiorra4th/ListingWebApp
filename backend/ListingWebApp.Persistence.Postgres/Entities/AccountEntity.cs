@@ -15,6 +15,7 @@ public sealed class AccountEntity
     public ICollection<ProfileEntity> Profiles { get; set; } = [];
     
     public required AccountStatus Status { get; set; } = AccountStatus.Unverified;
+    public required AccountRole Role { get; set; } = AccountRole.User;
     
     public required DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public required DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

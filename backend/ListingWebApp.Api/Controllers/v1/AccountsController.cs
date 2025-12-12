@@ -19,7 +19,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.GetAccountByIdAsync(id);
@@ -27,7 +27,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {
         var result = await _accountsService.DeleteAccountAsync(id);
@@ -35,7 +35,7 @@ public sealed class AccountsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatusAsync(
         [FromRoute] Guid id, 
         [FromBody] UpdateAccountStatusRequestDto dto)
