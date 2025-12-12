@@ -13,6 +13,8 @@ public sealed class AccountEntity
     public SessionEntity? Session { get; set; }
 
     public ICollection<ProfileEntity> Profiles { get; set; } = [];
+    public ICollection<ItemEntryEntity> Items { get; set; } = [];
+    public ICollection<ListingEntity> Listings { get; set; } = [];
     
     public required AccountStatus Status { get; set; } = AccountStatus.Unverified;
     public required AccountRole Role { get; set; } = AccountRole.User;
