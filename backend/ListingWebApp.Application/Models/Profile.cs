@@ -6,18 +6,18 @@ namespace ListingWebApp.Application.Models;
 
 public sealed class Profile
 {
-    public Guid Id { get; private set; }
-    public Guid AccountId { get; private set; }
+    public Guid Id { get; }
+    public Guid AccountId { get; }
 
-    public string Nickname { get; private set; }
-    public int Age { get; private set; }
-    public string? IconKey { get; private set; }
-    
-    public LanguageCode LanguageCode { get; private set; }
-    public CountryCode CountryCode { get; private set; }
-    
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public string Nickname { get; }
+    public int Age { get; }
+    public string? IconKey { get; }
+
+    public LanguageCode LanguageCode { get; }
+    public CountryCode CountryCode { get; }
+
+    public DateTime CreatedAt { get; }
+    public DateTime UpdatedAt { get; }
 
     private Profile(
         Guid id,
@@ -51,10 +51,10 @@ public sealed class Profile
     {
         if (accountId == Guid.Empty)
             return Result.Fail<Profile>(new ValidationError(nameof(Profile), "AccountId is required."));
-        
+
         if (string.IsNullOrWhiteSpace(nickname))
             return Result.Fail<Profile>(new ValidationError(nameof(Profile), "Nickname is required."));
-        
+
         if (age <= 0)
             return Result.Fail<Profile>(new ValidationError(nameof(Profile), "Age must be positive."));
 

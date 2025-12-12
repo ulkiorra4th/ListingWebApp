@@ -11,6 +11,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountsService, AccountsService>();
         services.AddScoped<IProfilesService, ProfilesService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICurrenciesService, CurrenciesService>();
+        services.AddScoped<IItemsService, ItemsService>();
+        services.AddScoped<IItemEntriesService, ItemEntriesService>();
+        services.AddScoped<IListingsService, ListingsService>();
+        services.AddScoped<ITradeTransactionsService, TradeTransactionsService>();
+        services.AddScoped<IWalletsService, WalletsService>();
         services.AddSingleton<IAccountVerificationQueue, AccountVerificationQueue>();
         
         return services;

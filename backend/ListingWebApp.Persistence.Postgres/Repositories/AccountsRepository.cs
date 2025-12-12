@@ -25,12 +25,12 @@ internal sealed class AccountsRepository : IAccountsRepository
             .FirstOrDefaultAsync(x => x.Email == email && x.Status != AccountStatus.Deleted);
 
         if (account is null) return Result.Fail<Account>(new NotFoundError(nameof(Account)));
-        
+
         return Account.Create(
             id: account.Id,
             email: account.Email,
             passwordHash: account.PasswordHash,
-            salt:  account.Salt,
+            salt: account.Salt,
             role: account.Role,
             status: account.Status,
             createdAt: account.CreatedAt,
@@ -42,14 +42,14 @@ internal sealed class AccountsRepository : IAccountsRepository
         var account = await _context.Accounts
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && x.Status != AccountStatus.Deleted);
-        
+
         if (account is null) return Result.Fail<Account>(new NotFoundError(nameof(Account)));
-        
+
         return Account.Create(
             id: account.Id,
             email: account.Email,
             passwordHash: account.PasswordHash,
-            salt:  account.Salt,
+            salt: account.Salt,
             role: account.Role,
             status: account.Status,
             createdAt: account.CreatedAt,
@@ -70,9 +70,16 @@ internal sealed class AccountsRepository : IAccountsRepository
             UpdatedAt = account.UpdatedAt
         };
 
-        _context.Accounts.Add(accountEntity);
-        await _context.SaveChangesAsync();
-        return Result.Ok(accountEntity.Id);
+        try
+        {
+            _context.Accounts.Add(accountEntity);
+            await _context.SaveChangesAsync();
+            return Result.Ok(accountEntity.Id);
+        }
+        catch (Exception)
+        {
+            return Result.Fail<Guid>($"Account with email {account.Email} already exists.");
+        }
     }
 
     public async Task<Result<Guid>> AddProfileToAccountAsync(Profile profile)
@@ -82,7 +89,7 @@ internal sealed class AccountsRepository : IAccountsRepository
 
         if (accountEntity is null)
             return Result.Fail<Guid>(new NotFoundError(nameof(Account)));
-        
+
         var profileEntity = new ProfileEntity
         {
             Id = profile.Id,
@@ -107,9 +114,9 @@ internal sealed class AccountsRepository : IAccountsRepository
             .Where(x => x.Id == id && x.Status != AccountStatus.Deleted)
             .ExecuteUpdateAsync(x =>
                 x.SetProperty(p => p.Status, AccountStatus.Deleted));
-        
-        return totalUpdated == 0 
-            ? Result.Fail(new NotFoundError(nameof(Account))) 
+
+        return totalUpdated == 0
+            ? Result.Fail(new NotFoundError(nameof(Account)))
             : Result.Ok();
     }
 
@@ -119,9 +126,9 @@ internal sealed class AccountsRepository : IAccountsRepository
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(x =>
                 x.SetProperty(p => p.Status, status));
-        
-        return totalUpdated == 0 
-            ? Result.Fail(new NotFoundError(nameof(Account))) 
+
+        return totalUpdated == 0
+            ? Result.Fail(new NotFoundError(nameof(Account)))
             : Result.Ok();
     }
 }

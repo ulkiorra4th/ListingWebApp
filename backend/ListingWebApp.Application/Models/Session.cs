@@ -5,16 +5,16 @@ namespace ListingWebApp.Application.Models;
 
 public sealed class Session
 {
-    public Guid Id { get; private set; }
-    public Guid AccountId { get; private set; }
+    public Guid Id { get; }
+    public Guid AccountId { get; }
 
-    public string RefreshTokenHash { get; private set; }
-    public bool IsActive { get; private set; }
-    
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
-    public DateTime ExpiresAt { get; private set; }
-    public DateTime? RevokedAt { get; private set; }
+    public string RefreshTokenHash { get; }
+    public bool IsActive { get; }
+
+    public DateTime CreatedAt { get; }
+    public DateTime UpdatedAt { get; }
+    public DateTime ExpiresAt { get; }
+    public DateTime? RevokedAt { get; }
 
     private Session(
         Guid id,
@@ -43,7 +43,7 @@ public sealed class Session
     {
         if (accountId == Guid.Empty)
             return Result.Fail<Session>(new ValidationError(nameof(Session), "AccountId is required."));
-        
+
         if (string.IsNullOrWhiteSpace(refreshTokenHash))
             return Result.Fail<Session>(new ValidationError(nameof(Session), "Refresh token hash is required."));
 

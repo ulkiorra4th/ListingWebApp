@@ -11,4 +11,5 @@ public interface IProfilesRepository
     Task<Result> DeleteProfileAsync(Guid id);
     Task<Result> UpdateProfileAsync(Profile profile);
     Task<Result<List<Profile>>> GetAllProfilesAsync(Guid accountId);
+    Task<Result> UpdateIconKeyAsync(Guid accountId, Guid profileId, string? iconKey);
 }

@@ -15,6 +15,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountsRepository, AccountsRepository>();
         services.AddScoped<IProfilesRepository, ProfilesRepository>();
         services.AddScoped<ISessionsRepository, SessionsRepository>();
+        services.AddScoped<IItemsRepository, ItemsRepository>();
+        services.AddScoped<IItemEntriesRepository, ItemEntriesRepository>();
+        services.AddScoped<ICurrenciesRepository, CurrenciesRepository>();
+        services.AddScoped<IListingsRepository, ListingsRepository>();
+        services.AddScoped<ITradeTransactionsRepository, TradeTransactionsRepository>();
+        services.AddScoped<IWalletsRepository, WalletsRepository>();
         
         return services;
     }

@@ -135,6 +135,19 @@ internal sealed class ProfilesRepository : IProfilesRepository
         return Result.Ok(profiles);
     }
 
+    public async Task<Result> UpdateIconKeyAsync(Guid accountId, Guid profileId, string? iconKey)
+    {
+        var totalUpdated = await _context.Profiles
+            .Where(p => p.Id == profileId && p.Account.Id == accountId)
+            .ExecuteUpdateAsync(p => p
+                .SetProperty(x => x.IconKey, iconKey)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow));
+
+        return totalUpdated == 0
+            ? Result.Fail(new NotFoundError(nameof(Profile)))
+            : Result.Ok();
+    }
+
     private static Result<Profile> MapToDomain(ProfileEntity entity) =>
         Profile.Create(
             id: entity.Id,

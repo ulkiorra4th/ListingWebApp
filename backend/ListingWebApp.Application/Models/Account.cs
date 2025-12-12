@@ -7,17 +7,17 @@ namespace ListingWebApp.Application.Models;
 
 public sealed class Account
 {
-    public Guid Id { get; private set; }
+    public Guid Id { get; }
 
-    public string Email { get; private set; }
-    public string PasswordHash { get; private set; }
-    public string Salt { get; private set; }
+    public string Email { get; }
+    public string PasswordHash { get; }
+    public string Salt { get; }
     
-    public AccountStatus Status { get; private set; }
-    public AccountRole Role { get; private set; }
+    public AccountStatus Status { get; }
+    public AccountRole Role { get; }
     
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime CreatedAt { get; }
+    public DateTime UpdatedAt { get; }
 
     private Account(
         Guid id, 
