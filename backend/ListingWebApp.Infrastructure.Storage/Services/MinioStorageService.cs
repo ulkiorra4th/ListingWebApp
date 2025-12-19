@@ -83,7 +83,7 @@ public sealed class MinioStorageService : IObjectStorageService
     {
         return string.IsNullOrWhiteSpace(path) 
             ? Result.Fail<string>(new ValidationError("Path is required.")) 
-            : Path.Combine(_client.Config.BaseUrl, _defaultBucket, path);
+            : Path.Combine(_client.Config.BaseUrl.Replace("minio", "localhost"), _defaultBucket, path);
     }
 
     private async Task EnsureBucket(string bucket, CancellationToken ct)
