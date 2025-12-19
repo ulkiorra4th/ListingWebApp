@@ -129,6 +129,17 @@ internal sealed class ProfilesService : IProfilesService
         return await _profilesRepository.UpdateIconKeyAsync(accountId, profileId, iconKey);
     }
 
+    public async Task<Result<string>> GetIconUrlAsync(Guid accountId, Guid profileId)
+    {
+        var profileResult = await _profilesRepository.GetProfileByIdAsync(accountId, profileId);
+        if (profileResult.IsFailed)
+        {
+            return Result.Fail<string>(profileResult.Errors);
+        }
+
+        return _objectStorageService.GetDownloadUrl(profileResult.Value.IconKey!);
+    }
+
     private static GetProfileDto MapToDto(Profile profile) =>
         new(
             Id: profile.Id,

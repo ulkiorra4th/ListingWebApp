@@ -8,18 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
+[Authorize(Roles = "User,Admin")]
 [Route("api/v1/accounts/{accountId:guid}/wallets")]
-public sealed class WalletsController : ControllerBase
+public sealed class WalletsController(IWalletsService walletsService) : ControllerBase
 {
-    private readonly IWalletsService _walletsService;
-
-    public WalletsController(IWalletsService walletsService)
-    {
-        _walletsService = walletsService;
-    }
-
     [HttpGet("{currencyCode}")]
-    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync(
         [FromRoute] Guid accountId, 
         [FromRoute] string currencyCode)
@@ -35,12 +28,11 @@ public sealed class WalletsController : ControllerBase
             return Unauthorized("Access denied.");
         }
         
-        var result = await _walletsService.GetByIdAsync(accountId, currencyCode);
+        var result = await walletsService.GetByIdAsync(accountId, currencyCode);
         return result.ToActionResult();
     }
 
     [HttpPut("{currencyCode}")]
-    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> UpsertAsync(
         [FromRoute] Guid accountId, 
         [FromRoute] string currencyCode, 
@@ -58,12 +50,11 @@ public sealed class WalletsController : ControllerBase
         }
         
         var request = dto with { AccountId = accountId, CurrencyCode = currencyCode };
-        var result = await _walletsService.UpsertAsync(request);
+        var result = await walletsService.UpsertAsync(request);
         return result.ToActionResult();
     }
 
     [HttpPost("{currencyCode}/credit")]
-    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> CreditAsync(
         [FromRoute] Guid accountId,
         [FromRoute] string currencyCode,
@@ -81,12 +72,11 @@ public sealed class WalletsController : ControllerBase
         }
         
         var request = dto with { AccountId = accountId, CurrencyCode = currencyCode };
-        var result = await _walletsService.CreditAsync(request);
+        var result = await walletsService.CreditAsync(request);
         return result.ToActionResult();
     }
 
     [HttpPost("{currencyCode}/debit")]
-    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> DebitAsync(
         [FromRoute] Guid accountId, 
         [FromRoute] string currencyCode, 
@@ -104,7 +94,7 @@ public sealed class WalletsController : ControllerBase
         }
         
         var request = dto with { AccountId = accountId, CurrencyCode = currencyCode };
-        var result = await _walletsService.DebitAsync(request);
+        var result = await walletsService.DebitAsync(request);
         return result.ToActionResult();
     }
 }

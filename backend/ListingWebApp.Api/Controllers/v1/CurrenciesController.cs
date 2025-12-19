@@ -8,20 +8,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/currencies")]
-public sealed class CurrenciesController : ControllerBase
+public sealed class CurrenciesController(ICurrenciesService currenciesService) : ControllerBase
 {
-    private readonly ICurrenciesService _currenciesService;
-
-    public CurrenciesController(ICurrenciesService currenciesService)
-    {
-        _currenciesService = currenciesService;
-    }
-
     [HttpGet]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetAllAsync()
     {
-        var result = await _currenciesService.GetAllAsync();
+        var result = await currenciesService.GetAllAsync();
         return result.ToActionResult();
     }
 
@@ -29,7 +22,7 @@ public sealed class CurrenciesController : ControllerBase
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByCodeAsync([FromRoute] string code)
     {
-        var result = await _currenciesService.GetByCodeAsync(code);
+        var result = await currenciesService.GetByCodeAsync(code);
         return result.ToActionResult();
     }
 
@@ -37,7 +30,7 @@ public sealed class CurrenciesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateCurrencyDto dto)
     {
-        var result = await _currenciesService.AddAsync(dto);
+        var result = await currenciesService.AddAsync(dto);
         return result.ToActionResult(created: true);
     }
 
@@ -58,7 +51,7 @@ public sealed class CurrenciesController : ControllerBase
         var extension = Path.GetExtension(file.FileName);
         var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
         
-        var result = await _currenciesService.UpdateIconAsync(code, stream, extension, contentType, ct);
+        var result = await currenciesService.UpdateIconAsync(code, stream, extension, contentType, ct);
         return result.ToActionResult();
     }
 }

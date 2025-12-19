@@ -8,20 +8,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/items")]
-public sealed class ItemsController : ControllerBase
+public sealed class ItemsController(IItemsService itemsService) : ControllerBase
 {
-    private readonly IItemsService _itemsService;
-
-    public ItemsController(IItemsService itemsService)
-    {
-        _itemsService = itemsService;
-    }
-
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
-        var result = await _itemsService.GetByIdAsync(id);
+        var result = await itemsService.GetByIdAsync(id);
         return result.ToActionResult();
     }
 
@@ -29,7 +22,7 @@ public sealed class ItemsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateItemDto dto)
     {
-        var result = await _itemsService.CreateAsync(dto);
+        var result = await itemsService.CreateAsync(dto);
         return result.ToActionResult(created: true);
     }
 
@@ -50,7 +43,7 @@ public sealed class ItemsController : ControllerBase
         var extension = Path.GetExtension(file.FileName);
         var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
 
-        var result = await _itemsService.UpdateIconAsync(id, stream, extension, contentType, ct);
+        var result = await itemsService.UpdateIconAsync(id, stream, extension, contentType, ct);
         return result.ToActionResult();
     }
 }

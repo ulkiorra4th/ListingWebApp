@@ -8,20 +8,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/item-entries")]
-public sealed class ItemEntriesController : ControllerBase
+public sealed class ItemEntriesController(IItemEntriesService itemEntriesService) : ControllerBase
 {
-    private readonly IItemEntriesService _itemEntriesService;
-
-    public ItemEntriesController(IItemEntriesService itemEntriesService)
-    {
-        _itemEntriesService = itemEntriesService;
-    }
-
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
-        var result = await _itemEntriesService.GetByIdAsync(id);
+        var result = await itemEntriesService.GetByIdAsync(id);
         return result.ToActionResult();
     }
 
@@ -29,7 +22,7 @@ public sealed class ItemEntriesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateItemEntryDto dto)
     {
-        var result = await _itemEntriesService.CreateAsync(dto);
+        var result = await itemEntriesService.CreateAsync(dto);
         return result.ToActionResult(created: true);
     }
 }

@@ -8,20 +8,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/accounts")]
-public sealed class AccountsController : ControllerBase
+public sealed class AccountsController(IAccountsService accountsService) : ControllerBase
 {
-    private readonly IAccountsService _accountsService;
-
-    public AccountsController(IAccountsService accountsService)
-    {
-        _accountsService = accountsService;
-    }
-
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
-        var result = await _accountsService.GetAccountByIdAsync(id);
+        var result = await accountsService.GetAccountByIdAsync(id);
         return result.ToActionResult();
     }
 
@@ -29,7 +22,7 @@ public sealed class AccountsController : ControllerBase
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {
-        var result = await _accountsService.DeleteAccountAsync(id);
+        var result = await accountsService.DeleteAccountAsync(id);
         return result.ToActionResult();
     }
 
@@ -39,7 +32,7 @@ public sealed class AccountsController : ControllerBase
         [FromRoute] Guid id, 
         [FromBody] UpdateAccountStatusRequestDto dto)
     {
-        var result = await _accountsService.UpdateStatusAsync(id, dto.Status);
+        var result = await accountsService.UpdateStatusAsync(id, dto.Status);
         return result.ToActionResult();
     }
 }

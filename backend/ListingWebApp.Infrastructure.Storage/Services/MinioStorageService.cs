@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using ListingWebApp.Application.Contracts.Infrastructure;
+using ListingWebApp.Common.Errors;
 using ListingWebApp.Infrastructure.Storage.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -77,7 +78,14 @@ public sealed class MinioStorageService : IObjectStorageService
         }
         
     }
-    
+
+    public  Result<string> GetDownloadUrl(string path)
+    {
+        return string.IsNullOrWhiteSpace(path) 
+            ? Result.Fail<string>(new ValidationError("Path is required.")) 
+            : Path.Combine(_client.Config.BaseUrl, _defaultBucket, path);
+    }
+
     private async Task EnsureBucket(string bucket, CancellationToken ct)
     {
         try

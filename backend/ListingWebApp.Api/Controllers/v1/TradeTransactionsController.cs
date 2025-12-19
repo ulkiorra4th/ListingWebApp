@@ -6,21 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
+[Authorize(Roles = "User,Admin")]
 [Route("api/v1/trade-transactions")]
-public sealed class TradeTransactionsController : ControllerBase
+public sealed class TradeTransactionsController(ITradeTransactionsService tradeTransactionsService) : ControllerBase
 {
-    private readonly ITradeTransactionsService _tradeTransactionsService;
-
-    public TradeTransactionsController(ITradeTransactionsService tradeTransactionsService)
-    {
-        _tradeTransactionsService = tradeTransactionsService;
-    }
-
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
-        var result = await _tradeTransactionsService.GetByIdAsync(id);
+        var result = await tradeTransactionsService.GetByIdAsync(id);
         return result.ToActionResult();
     }
 }

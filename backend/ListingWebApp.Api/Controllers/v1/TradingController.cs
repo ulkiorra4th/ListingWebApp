@@ -8,18 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
+[Authorize(Roles = "User")]
 [Route("api/v1/listings/{listingId:guid}")]
-public sealed class TradingController : ControllerBase
+public sealed class TradingController(ITradingService tradingService) : ControllerBase
 {
-    private readonly ITradingService _tradingService;
-
-    public TradingController(ITradingService tradingService)
-    {
-        _tradingService = tradingService;
-    }
-
     [HttpPost("purchase")]
-    [Authorize(Roles = "User")]
     public async Task<IActionResult> PurchaseAsync([FromRoute] Guid listingId)
     {
         var accountId = User.FindFirstValue("accountId");
@@ -29,7 +22,7 @@ public sealed class TradingController : ControllerBase
         }
 
         var dto = new PurchaseRequestDto(accountGuid, listingId);
-        var result = await _tradingService.PurchaseAsync(dto);
+        var result = await tradingService.PurchaseAsync(dto);
         return result.ToActionResult(created: true);
     }
 }

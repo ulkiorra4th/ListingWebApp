@@ -10,20 +10,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/auth")]
-public sealed class AuthController : ControllerBase
+public sealed class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
-
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterAsync([FromBody] LoginRequestDto dto)
     {
-        var result = await _authService.RegisterAsync(dto);
+        var result = await authService.RegisterAsync(dto);
         if (result.IsFailed)
         {
             return result.ToActionResult();
@@ -43,7 +36,7 @@ public sealed class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto dto)
     {
-        var result = await _authService.LoginAsync(dto.Email, dto.Password);
+        var result = await authService.LoginAsync(dto.Email, dto.Password);
         if (result.IsFailed)
         {
             return result.ToActionResult();
@@ -69,7 +62,7 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _authService.RefreshAsync(refreshToken);
+        var result = await authService.RefreshAsync(refreshToken);
         return result.ToActionResult();
     }
 
@@ -89,7 +82,7 @@ public sealed class AuthController : ControllerBase
             SameSite = SameSiteMode.None
         });
 
-        var result = await _authService.LogoutAsync(accountGuid);
+        var result = await authService.LogoutAsync(accountGuid);
         return result.ToActionResult();
     }
 
@@ -104,7 +97,7 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _authService.VerifyAccountAsync(accountGuid, dto.Code);
+        var result = await authService.VerifyAccountAsync(accountGuid, dto.Code);
         return result.ToActionResult();
     }
 }

@@ -8,22 +8,15 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/accounts/{accountId:guid}/profiles")]
-public sealed class ProfilesController : ControllerBase
+public sealed class ProfilesController(IProfilesService profilesService) : ControllerBase
 {
-    private readonly IProfilesService _profilesService;
-
-    public ProfilesController(IProfilesService profilesService)
-    {
-        _profilesService = profilesService;
-    }
-
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)
     {
-        var result = await _profilesService.GetProfileByIdAsync(accountId, id);
+        var result = await profilesService.GetProfileByIdAsync(accountId, id);
         return result.ToActionResult();
     }
 
@@ -31,7 +24,7 @@ public sealed class ProfilesController : ControllerBase
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetAllAsync([FromRoute] Guid accountId)
     {
-        var result = await _profilesService.GetAllProfilesAsync(accountId);
+        var result = await profilesService.GetAllProfilesAsync(accountId);
         return result.ToActionResult();
     }
 
@@ -43,7 +36,7 @@ public sealed class ProfilesController : ControllerBase
     {
         var request = dto with { AccountId = accountId };
 
-        var result = await _profilesService.CreateProfileAsync(request);
+        var result = await profilesService.CreateProfileAsync(request);
         return result.ToActionResult(true);
     }
 
@@ -56,7 +49,7 @@ public sealed class ProfilesController : ControllerBase
     {
         var request = dto with { Id = id, AccountId = accountId };
 
-        var result = await _profilesService.UpdateProfileAsync(request);
+        var result = await profilesService.UpdateProfileAsync(request);
         return result.ToActionResult();
     }
 
@@ -66,11 +59,21 @@ public sealed class ProfilesController : ControllerBase
         [FromRoute] Guid accountId,
         [FromRoute] Guid id)
     {
-        var result = await _profilesService.DeleteProfileAsync(id);
+        var result = await profilesService.DeleteProfileAsync(id);
         return result.ToActionResult();
     }
 
     [HttpPatch("{id:guid}/icon")]
+    [Authorize(Roles = "User,Admin")]
+    public async Task<IActionResult> GetIconUrlAsync(
+        [FromRoute] Guid accountId,
+        [FromRoute] Guid id)
+    {
+        var result = await profilesService.GetIconUrlAsync(accountId, id);
+        return result.ToActionResult();
+    }
+    
+    [HttpGet("{id:guid}/icon")]
     [Authorize(Roles = "User,Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateIconAsync(
@@ -88,7 +91,7 @@ public sealed class ProfilesController : ControllerBase
         var extension = Path.GetExtension(file.FileName);
         var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
 
-        var result = await _profilesService.UpdateIconAsync(accountId, id, stream, extension, contentType, ct);
+        var result = await profilesService.UpdateIconAsync(accountId, id, stream, extension, contentType, ct);
         return result.ToActionResult();
     }
 }

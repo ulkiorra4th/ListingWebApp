@@ -9,20 +9,13 @@ namespace ListingWebApp.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/listings")]
-public sealed class ListingsController : ControllerBase
+public sealed class ListingsController(IListingsService listingsService) : ControllerBase
 {
-    private readonly IListingsService _listingsService;
-
-    public ListingsController(IListingsService listingsService)
-    {
-        _listingsService = listingsService;
-    }
-
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
     {
-        var result = await _listingsService.GetByIdAsync(id);
+        var result = await listingsService.GetByIdAsync(id);
         return result.ToActionResult();
     }
 
@@ -30,7 +23,7 @@ public sealed class ListingsController : ControllerBase
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateListingDto dto)
     {
-        var result = await _listingsService.CreateAsync(dto);
+        var result = await listingsService.CreateAsync(dto);
         return result.ToActionResult(created: true);
     }
 
@@ -38,7 +31,7 @@ public sealed class ListingsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatusAsync([FromRoute] Guid id, [FromBody] ListingStatus status)
     {
-        var result = await _listingsService.UpdateStatusAsync(id, status);
+        var result = await listingsService.UpdateStatusAsync(id, status);
         return result.ToActionResult();
     }
 }

@@ -12,6 +12,7 @@ public interface IProfilesService
     Task<Result> DeleteProfileAsync(Guid id);
     Task<Result> UpdateProfileAsync(UpdateProfileDto profile);
     Task<Result<List<GetProfileDto>>> GetAllProfilesAsync(Guid accountId);
+    Task<Result<string>> GetIconUrlAsync(Guid accountId, Guid profileId);
     Task<Result> UpdateIconAsync(
         Guid accountId,
         Guid profileId,
