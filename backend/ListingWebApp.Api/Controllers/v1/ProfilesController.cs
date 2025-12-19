@@ -63,7 +63,7 @@ public sealed class ProfilesController(IProfilesService profilesService) : Contr
         return result.ToActionResult();
     }
 
-    [HttpPatch("{id:guid}/icon")]
+    [HttpGet("{id:guid}/icon")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetIconUrlAsync(
         [FromRoute] Guid accountId,
@@ -73,7 +73,7 @@ public sealed class ProfilesController(IProfilesService profilesService) : Contr
         return result.ToActionResult();
     }
     
-    [HttpGet("{id:guid}/icon")]
+    [HttpPatch("{id:guid}/icon")]
     [Authorize(Roles = "User,Admin")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateIconAsync(
