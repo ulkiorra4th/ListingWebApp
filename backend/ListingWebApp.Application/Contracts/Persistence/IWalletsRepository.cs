@@ -5,6 +5,7 @@ namespace ListingWebApp.Application.Contracts.Persistence;
 
 public interface IWalletsRepository
 {
+    Task<Result> CreateAsync(Wallet wallet);
     Task<Result<Wallet>> GetByIdAsync(Guid accountId, string currencyCode);
     Task<Result> UpsertAsync(Wallet wallet);
     Task<Result> IncreaseBalanceAsync(Guid accountId, string currencyCode, decimal amount, DateTime transactionDate);

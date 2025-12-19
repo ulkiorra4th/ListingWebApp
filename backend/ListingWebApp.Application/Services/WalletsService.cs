@@ -17,6 +17,20 @@ internal sealed class WalletsService : IWalletsService
         _walletsRepository = walletsRepository;
     }
 
+    public async Task<Result> CreateAsync(CreateWalletDto dto)
+    {
+        var walletResult = Wallet.Create(
+            currencyCode: dto.CurrencyCode,
+            accountId: dto.AccountId,
+            balance: 0,
+            lastTransactionDate: null,
+            isActive: true);
+
+        return walletResult.IsFailed
+            ? Result.Fail(walletResult.Errors)
+            : await _walletsRepository.CreateAsync(walletResult.Value);
+    }
+
     public async Task<Result<GetWalletDto>> GetByIdAsync(Guid accountId, string currencyCode)
     {
         var walletResult = await _walletsRepository.GetByIdAsync(accountId, currencyCode);

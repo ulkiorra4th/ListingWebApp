@@ -18,6 +18,39 @@ internal sealed class WalletsRepository : IWalletsRepository
         _context = context;
     }
 
+    public async Task<Result> CreateAsync(Wallet wallet)
+    {
+        var currency = await _context.Currencies
+            .FirstOrDefaultAsync(c => c.CurrencyCode == wallet.CurrencyCode);
+        if (currency is null)
+            return Result.Fail(new NotFoundError(nameof(Currency)));
+
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == wallet.AccountId && a.Status != AccountStatus.Deleted);
+        if (account is null)
+            return Result.Fail(new NotFoundError(nameof(Account)));
+
+        var exists = await _context.Wallets.AnyAsync(w =>
+            w.AccountId == wallet.AccountId && w.CurrencyCode == wallet.CurrencyCode);
+        if (exists)
+            return Result.Fail(new ValidationError(nameof(Wallet), "Wallet already exists."));
+
+        var entity = new WalletEntity
+        {
+            CurrencyCode = wallet.CurrencyCode,
+            AccountId = wallet.AccountId,
+            Currency = currency,
+            Account = account,
+            Balance = wallet.Balance,
+            LastTransactionDate = wallet.LastTransactionDate,
+            IsActive = wallet.IsActive
+        };
+
+        _context.Wallets.Add(entity);
+        await _context.SaveChangesAsync();
+        return Result.Ok();
+    }
+
     public async Task<Result<Wallet>> GetByIdAsync(Guid accountId, string currencyCode)
     {
         var entity = await _context.Wallets

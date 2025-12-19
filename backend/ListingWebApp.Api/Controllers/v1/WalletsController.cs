@@ -12,6 +12,27 @@ namespace ListingWebApp.Api.Controllers.v1;
 [Route("api/v1/accounts/{accountId:guid}/wallets")]
 public sealed class WalletsController(IWalletsService walletsService) : ControllerBase
 {
+    [HttpPost("{currencyCode}")]
+    public async Task<IActionResult> CreateAsync(
+        [FromRoute] Guid accountId,
+        [FromRoute] string currencyCode)
+    {
+        var currentAccountId = User.FindFirstValue("accountId");
+        if (!Guid.TryParse(currentAccountId, out var accountGuid))
+        {
+            return Unauthorized();
+        }
+
+        if (accountGuid != accountId)
+        {
+            return Unauthorized("Access denied.");
+        }
+
+        var request = new CreateWalletDto(AccountId: accountId, CurrencyCode: currencyCode);
+        var result = await walletsService.CreateAsync(request);
+        return result.ToActionResult(created: true);
+    }
+
     [HttpGet("{currencyCode}")]
     public async Task<IActionResult> GetByIdAsync(
         [FromRoute] Guid accountId, 
