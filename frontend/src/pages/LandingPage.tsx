@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, CheckCircle2, ImagePlus, ShieldCheck, UserPlus } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ImagePlus, ShieldCheck, UserPlus, Wallet2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
+import { useCurrencies } from '@/hooks/useCurrencies';
 import { AccountStatus, CountryCode, LanguageCode } from '@/types';
 
 function getErrorMessage(error: unknown) {
@@ -29,7 +30,10 @@ export default function LandingPage() {
     uploadAvatar,
     skipAvatar,
     profile,
+    createWallet,
+    walletReady,
   } = useAuth();
+  const { currencies, refresh: refreshCurrencies, loading: currenciesLoading } = useCurrencies(account?.id ?? isAuthenticated);
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [code, setCode] = useState('');
@@ -39,6 +43,7 @@ export default function LandingPage() {
     languageCode: 4, // Russian
     countryCode: 4, // Russia
   });
+  const [currencyCode, setCurrencyCode] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -50,6 +55,18 @@ export default function LandingPage() {
       navigate('/app', { replace: true });
     }
   }, [authStep, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!currencyCode && currencies.length) {
+      setCurrencyCode(currencies[0].currencyCode);
+    }
+  }, [currencies, currencyCode]);
+
+  useEffect(() => {
+    if (authStep === 'wallet') {
+      refreshCurrencies();
+    }
+  }, [authStep, refreshCurrencies]);
 
   const handleLogin = async () => {
     setError('');
@@ -110,14 +127,30 @@ export default function LandingPage() {
     }
   };
 
+  const handleCreateWallet = async () => {
+    if (!currencyCode) {
+      setError('Выберите валюту');
+      return;
+    }
+    setError('');
+    setMessage('');
+    try {
+      await createWallet(currencyCode);
+      setMessage(`Кошелек в ${currencyCode} готов! Теперь можно перейти в дашборд.`);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  };
+
   const steps = useMemo(
     () => [
       { key: 'login', label: 'Создать аккаунт', done: authStep !== 'login', icon: <UserPlus size={16} /> },
-      { key: 'verify', label: 'Верификация', done: authStep === 'profile' || authStep === 'avatar' || authStep === 'ready', icon: <ShieldCheck size={16} /> },
-      { key: 'profile', label: 'Профиль', done: authStep === 'avatar' || authStep === 'ready', icon: <CheckCircle2 size={16} /> },
-      { key: 'avatar', label: 'Аватар (опционально)', done: authStep === 'ready' || !!profile?.iconKey, icon: <ImagePlus size={16} /> },
+      { key: 'verify', label: 'Верификация', done: authStep !== 'verify' && authStep !== 'login', icon: <ShieldCheck size={16} /> },
+      { key: 'profile', label: 'Профиль', done: authStep === 'avatar' || authStep === 'wallet' || authStep === 'ready', icon: <CheckCircle2 size={16} /> },
+      { key: 'avatar', label: 'Аватар (опционально)', done: authStep === 'wallet' || authStep === 'ready' || !!profile?.iconKey, icon: <ImagePlus size={16} /> },
+      { key: 'wallet', label: 'Кошелек', done: authStep === 'ready' || walletReady, icon: <Wallet2 size={16} /> },
     ],
-    [authStep, profile?.iconKey],
+    [authStep, profile?.iconKey, walletReady],
   );
 
   const languageOptions = [
@@ -283,6 +316,23 @@ export default function LandingPage() {
               <p className="text-sm text-slate-300">Вы готовы к торговле.</p>
               <Button onClick={() => navigate('/app')} iconRight={<ArrowRight size={16} />}>
                 Перейти в дашборд
+              </Button>
+            </div>
+          )}
+
+          {authStep === 'wallet' && (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-slate-300">Выберите валюту и создайте основной кошелек.</p>
+              <Select label="Валюта" value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value)} disabled={currenciesLoading}>
+                {currencies.length === 0 && <option value="">Нет доступных валют</option>}
+                {currencies.map((c) => (
+                  <option key={c.currencyCode} value={c.currencyCode}>
+                    {c.currencyCode} — {c.name}
+                  </option>
+                ))}
+              </Select>
+              <Button onClick={handleCreateWallet} loading={loading} iconRight={<Wallet2 size={16} />}>
+                Создать кошелек
               </Button>
             </div>
           )}

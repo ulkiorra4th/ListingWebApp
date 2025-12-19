@@ -6,6 +6,10 @@ export async function getWallet(accountId: string, currencyCode: string): Promis
   return response.data.data;
 }
 
+export async function createWallet(accountId: string, currencyCode: string): Promise<void> {
+  await api.post(`/v1/accounts/${accountId}/wallets/${currencyCode}`);
+}
+
 export async function creditWallet(accountId: string, currencyCode: string, amount: number): Promise<void> {
   await api.post(`/v1/accounts/${accountId}/wallets/${currencyCode}/credit`, {
     amount,

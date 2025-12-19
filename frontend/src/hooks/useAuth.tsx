@@ -13,9 +13,10 @@ import { login, logout as logoutApi, register, verifyAccount } from '@/services/
 import { getAccountById } from '@/services/accountsService';
 import { createProfile as createProfileApi, getProfiles, uploadProfileIcon } from '@/services/profilesService';
 import type { CreateProfilePayload } from '@/services/profilesService';
+import { createWallet, getWallet } from '@/services/walletService';
 import { tokenStorage } from '@/api/token';
 
-export type AuthStep = 'login' | 'verify' | 'profile' | 'avatar' | 'ready';
+export type AuthStep = 'login' | 'verify' | 'profile' | 'avatar' | 'wallet' | 'ready';
 
 export type AuthContextValue = {
   account: Account | null;
@@ -24,10 +25,13 @@ export type AuthContextValue = {
   loading: boolean;
   authStep: AuthStep;
   accountId: string | null;
+  walletReady: boolean;
+  walletCurrency: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   verify: (code: string) => Promise<void>;
   createProfile: (payload: CreateProfilePayload) => Promise<void>;
+  createWallet: (currencyCode: string) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
   skipAvatar: () => void;
   refresh: () => Promise<void>;
@@ -35,6 +39,7 @@ export type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const WALLET_CURRENCY_KEY = 'lw_wallet_currency';
 
 function isVerified(account?: Account | null) {
   if (!account) return false;
@@ -44,11 +49,12 @@ function isVerified(account?: Account | null) {
   return false;
 }
 
-function deriveStep(account: Account | null, profiles: Profile[], avatarSkipped: boolean): AuthStep {
+function deriveStep(account: Account | null, profiles: Profile[], avatarSkipped: boolean, walletReady: boolean): AuthStep {
   if (!account) return 'login';
   if (!isVerified(account)) return 'verify';
   if (!profiles.length) return 'profile';
   if (!avatarSkipped && !profiles[0].iconKey) return 'avatar';
+  if (!walletReady) return 'wallet';
   return 'ready';
 }
 
@@ -58,10 +64,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accountId, setAccountId] = useState<string | null>(tokenStorage.getAccountId());
   const [loading, setLoading] = useState(false);
   const [avatarSkipped, setAvatarSkipped] = useState(false);
+  const [walletReady, setWalletReady] = useState(false);
+  const [walletCurrency, setWalletCurrency] = useState<string | null>(() => localStorage.getItem(WALLET_CURRENCY_KEY));
 
   const profile = profiles[0] ?? null;
   const isAuthenticated = Boolean(accountId && tokenStorage.getAccessToken());
-  const authStep = deriveStep(account, profiles, avatarSkipped);
+  const authStep = deriveStep(account, profiles, avatarSkipped, walletReady);
+
+  const rememberWalletCurrency = useCallback((currencyCode: string) => {
+    localStorage.setItem(WALLET_CURRENCY_KEY, currencyCode);
+    setWalletCurrency(currencyCode);
+  }, []);
+
+  const clearWalletInfo = useCallback(() => {
+    localStorage.removeItem(WALLET_CURRENCY_KEY);
+    setWalletCurrency(null);
+    setWalletReady(false);
+  }, []);
+
+  const ensureWallet = useCallback(
+    async (id: string) => {
+      const code = localStorage.getItem(WALLET_CURRENCY_KEY);
+      if (!code) {
+        setWalletReady(false);
+        return;
+      }
+
+      try {
+        await getWallet(id, code);
+        setWalletReady(true);
+        setWalletCurrency(code);
+      } catch {
+        setWalletReady(false);
+      }
+    },
+    [],
+  );
 
   const loadAccountData = useCallback(
     async (id: string) => {
@@ -69,8 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccount(acc);
       setProfiles(prof);
       setAvatarSkipped(false);
+      await ensureWallet(id);
     },
-    [],
+    [ensureWallet],
   );
 
   const refresh = useCallback(async () => {
@@ -81,11 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfiles([]);
       setAccountId(null);
       setAvatarSkipped(false);
+      clearWalletInfo();
       return;
     }
     setAccountId(storedId);
     await loadAccountData(storedId);
-  }, [loadAccountData]);
+  }, [clearWalletInfo, loadAccountData]);
 
   useEffect(() => {
     refresh().catch(() => {
@@ -149,6 +189,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [accountId, loadAccountData],
   );
 
+  const handleCreateWallet = useCallback(
+    async (currencyCode: string) => {
+      if (!accountId) return;
+      setLoading(true);
+      try {
+        await createWallet(accountId, currencyCode);
+        rememberWalletCurrency(currencyCode);
+        setWalletReady(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [accountId, rememberWalletCurrency],
+  );
+
   const handleUploadAvatar = useCallback(
     async (file: File) => {
       if (!accountId || !profile?.id) return;
@@ -176,9 +231,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfiles([]);
       setAccountId(null);
       setAvatarSkipped(false);
+      clearWalletInfo();
       setLoading(false);
     }
-  }, []);
+  }, [clearWalletInfo]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -188,10 +244,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       authStep,
       accountId,
+      walletReady,
+      walletCurrency,
       login: handleLogin,
       register: handleRegister,
       verify: handleVerify,
       createProfile: handleCreateProfile,
+      createWallet: handleCreateWallet,
       uploadAvatar: handleUploadAvatar,
       skipAvatar: handleSkipAvatar,
       refresh,
@@ -204,10 +263,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       authStep,
       accountId,
+      walletReady,
+      walletCurrency,
       handleLogin,
       handleRegister,
       handleVerify,
       handleCreateProfile,
+      handleCreateWallet,
       handleUploadAvatar,
       handleSkipAvatar,
       refresh,
