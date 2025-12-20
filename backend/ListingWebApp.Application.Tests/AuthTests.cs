@@ -1,73 +1,109 @@
-using System.Text;
 using ListingWebApp.Application.Abstractions;
+using ListingWebApp.Application.Contracts.Infrastructure;
+using ListingWebApp.Application.Contracts.Persistence;
+using ListingWebApp.Application.Dto.Messages;
 using ListingWebApp.Application.Dto.Request;
+using ListingWebApp.Application.Models;
+using ListingWebApp.Common.Enums;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ListingWebApp.Application.Tests;
 
-public sealed class AuthTests
+public sealed class AuthTests : IClassFixture<ApplicationFixture>, IAsyncLifetime
 {
-    private const string Chars = "abcdefghijklmnopqrstuvwxyz";
-    private const string InvalidChars = @"!@#$%^&*()+=<>?/\|!@#$%'`~ ";
-    private const string Numbers = "0123456789";
-    private const int CountOfGeneratedTestData = 10;
-    private const int EmailLength = 12;
-    private const int PasswordLength = 16;
-    
+    private readonly ApplicationFixture _fixture;
     private readonly IAuthService _authService;
 
-    public AuthTests(IAuthService authService)
+    public AuthTests(ApplicationFixture fixture)
     {
-        _authService = Services.Provider.GetRequiredService<IAuthService>();
-    }
-    
-    [Theory]
-    [MemberData(nameof(AccountRegisterData))]
-    public async Task RegisterSuccessTest(string email, string password)
-    {
-        var dto = new LoginRequestDto(email, password);
-        var tokenResult = await _authService.RegisterAsync(dto);
-        Assert.True(tokenResult.IsSuccess);
-    }
-    
-    public static IEnumerable<object[]> AccountRegisterData()
-    {
-        for (int i = 0; i < CountOfGeneratedTestData; i++)
-        {
-            var email = GenerateEmail();
-            var password = GeneratePassword();
-            
-            yield return [email, password];
-        }
+        _fixture = fixture;
+        _authService = fixture.Provider.GetRequiredService<IAuthService>();
     }
 
-    private static string GenerateEmail(bool isInvalid = false)
+    public Task InitializeAsync()
     {
-        var randomString = new StringBuilder(EmailLength);
-        for (int j = 0; j < EmailLength; ++j)
-        {
-            randomString.Append(Chars[Random.Shared.Next(Chars.Length)]);
-        }
-
-        if (isInvalid)
-        {
-            randomString.Append(InvalidChars[Random.Shared.Next(InvalidChars.Length)]);
-        }
-
-        return randomString + "@gmail.com";
+        _fixture.ResetState();
+        return Task.CompletedTask;
     }
 
-    private static string GeneratePassword(bool isInvalid = false)
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task RegisterAsync_WithValidCredentials_PersistsAccountAndCachesCode()
     {
-        var randomString = new StringBuilder(PasswordLength);
-        for (int j = 0; j < PasswordLength / 2 - 1; ++j)
+        var dto = new LoginRequestDto("user@example.com", "Aa1!aaaa");
+
+        var result = await _authService.RegisterAsync(dto);
+
+        Assert.True(result.IsSuccess);
+
+        var accountId = Guid.Parse(result.Value.AccountId);
+        Assert.True(_fixture.Database.Accounts.ContainsKey(accountId));
+
+        var cachedSecret = await _fixture.CacheService.GetAsync<VerificationSecretData>(accountId.ToString());
+        Assert.True(cachedSecret.IsSuccess);
+        Assert.Single(_fixture.VerificationQueue.Messages);
+        Assert.Equal(dto.Email, _fixture.VerificationQueue.Messages[0].Email);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WithInvalidPassword_ReturnsFailure()
+    {
+        var dto = new LoginRequestDto("weak@example.com", "password");
+
+        var result = await _authService.RegisterAsync(dto);
+
+        Assert.True(result.IsFailed);
+        Assert.Empty(_fixture.Database.Accounts);
+        Assert.Empty(_fixture.VerificationQueue.Messages);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithIncorrectPassword_ReturnsFailure()
+    {
+        const string email = "login@example.com";
+        const string validPassword = "Aa1!aaaa";
+        await CreateAccountAsync(email, validPassword);
+
+        var result = await _authService.LoginAsync(email, "Wrong1!");
+
+        Assert.True(result.IsFailed);
+        Assert.Empty(_fixture.Database.Sessions);
+    }
+
+    [Fact]
+    public async Task VerifyAccountAsync_WithValidCode_UpdatesStatus()
+    {
+        const string email = "verify@example.com";
+        const string password = "Aa1!aaaa";
+        var account = await CreateAccountAsync(email, password);
+
+        var code = "123456";
+        var hashedCode = _fixture.Cryptography.HashSecret(code);
+        await _fixture.CacheService.ReplaceAsync(account.Id.ToString(), new VerificationSecretData(hashedCode.Hash, hashedCode.Salt), 10);
+
+        var result = await _authService.VerifyAccountAsync(account.Id, code);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(AccountStatus.Verified, _fixture.Database.Accounts[account.Id].Status);
+
+        var cacheLookup = await _fixture.CacheService.GetAsync<VerificationSecretData>(account.Id.ToString());
+        Assert.True(cacheLookup.IsFailed);
+    }
+
+    private async Task<Account> CreateAccountAsync(string email, string password)
+    {
+        var accountsRepository = _fixture.Provider.GetRequiredService<IAccountsRepository>();
+        var crypto = _fixture.Provider.GetRequiredService<ICryptographyService>();
+        var hashResult = crypto.HashSecret(password);
+        var accountResult = Account.Create(email, hashResult.Hash, hashResult.Salt);
+
+        if (accountResult.IsFailed)
         {
-            randomString.Append(Chars[Random.Shared.Next(Chars.Length)]);
+            throw new InvalidOperationException(string.Join(';', accountResult.Errors.Select(e => e.Message)));
         }
 
-        randomString.Append(Numbers[Random.Shared.Next(Numbers.Length)]);
-        
-        var password = randomString.ToString() + randomString.ToString().ToUpper();
-        return isInvalid ? password.ToLower() : password;
+        await accountsRepository.CreateAccountAsync(accountResult.Value);
+        return accountResult.Value;
     }
 }
