@@ -9,6 +9,7 @@ using ListingWebApp.Application.Models;
 using ListingWebApp.Common.Constants;
 using ListingWebApp.Common.Enums;
 using ListingWebApp.Common.Errors;
+using Microsoft.Extensions.Logging;
 
 namespace ListingWebApp.Application.Services;
 
@@ -23,6 +24,7 @@ internal sealed class AuthService : IAuthService
     private readonly ICryptographyService _cryptographyService;
     private readonly ICacheService _cacheService;
     private readonly IAccountVerificationQueue _accountVerificationQueue;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IJwtProvider jwtProvider,
@@ -30,7 +32,8 @@ internal sealed class AuthService : IAuthService
         ICryptographyService cryptographyService,
         ISessionsRepository sessionsRepository,
         ICacheService cacheService,
-        IAccountVerificationQueue accountVerificationQueue)
+        IAccountVerificationQueue accountVerificationQueue, 
+        ILogger<AuthService> logger)
     {
         _jwtProvider = jwtProvider;
         _accountsRepository = accountsRepository;
@@ -38,6 +41,7 @@ internal sealed class AuthService : IAuthService
         _sessionsRepository = sessionsRepository;
         _cacheService = cacheService;
         _accountVerificationQueue = accountVerificationQueue;
+        _logger = logger;
     }
 
     public async Task<Result<LoginResponseDto>> LoginAsync(string email, string password)
@@ -45,6 +49,8 @@ internal sealed class AuthService : IAuthService
         var accountResult = await _accountsRepository.GetAccountByEmailAsync(email);
         if (accountResult.IsFailed)
         {
+            _logger.LogError("Login failed for user with email {email}. Errors: {errors}", 
+                email, string.Join(';', accountResult.Errors));
             return Result.Fail<LoginResponseDto>(accountResult.Errors);
         }
 
@@ -53,6 +59,8 @@ internal sealed class AuthService : IAuthService
         var isPasswordValid = _cryptographyService.VerifySecret(account.PasswordHash, account.Salt, password);
         if (!isPasswordValid)
         {
+            _logger.LogError("Login failed for user with email {email}. Errors: {errors}", 
+                email, "password is incorrect.");
             return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Invalid credentials"));
         }
 
@@ -67,9 +75,13 @@ internal sealed class AuthService : IAuthService
 
         if (sessionResult.IsFailed)
         {
+            _logger.LogError("Login failed for user with email {email}. Errors: {errors}", 
+                email, string.Join(';', sessionResult.Errors));
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
 
+        _logger.LogInformation("User with email {email} logged in.", email);
+        
         var accessToken = _jwtProvider.GenerateToken(account, sessionResult.Value);
         return Result.Ok(new LoginResponseDto(accessToken, refreshToken, accountResult.Value.Id.ToString()));
     }
@@ -78,6 +90,8 @@ internal sealed class AuthService : IAuthService
     {
         if (!RegexPatterns.PasswordRegex().IsMatch(dto.Password))
         {
+            _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
+                dto.Email, "invalid password.");
             return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Bad password."));
         }
         
@@ -86,12 +100,16 @@ internal sealed class AuthService : IAuthService
         var accountResult = Account.Create(dto.Email, hashResult.Hash, hashResult.Salt);
         if (accountResult.IsFailed)
         {
+            _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
+                dto.Email, string.Join(';', accountResult.Errors));
             return Result.Fail<LoginResponseDto>(accountResult.Errors);
         }
 
         var createResult = await _accountsRepository.CreateAccountAsync(accountResult.Value);
         if (createResult.IsFailed)
         {
+            _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
+                dto.Email, string.Join(';', createResult.Errors));
             return Result.Fail<LoginResponseDto>(createResult.Errors);
         }
 
@@ -107,6 +125,8 @@ internal sealed class AuthService : IAuthService
 
         if (sessionResult.IsFailed)
         {
+            _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
+                dto.Email, string.Join(';', sessionResult.Errors));
             return Result.Fail<LoginResponseDto>(sessionResult.Errors);
         }
 
@@ -117,6 +137,8 @@ internal sealed class AuthService : IAuthService
         var cacheCodeResult = await _cacheService.ReplaceAsync(accountResult.Value.Id.ToString(), verificationSecret, 10);
         if (cacheCodeResult.IsFailed)
         {
+            _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
+                dto.Email, string.Join(';', cacheCodeResult.Errors));
             return Result.Fail<LoginResponseDto>(cacheCodeResult.Errors);
         }
         
@@ -125,6 +147,8 @@ internal sealed class AuthService : IAuthService
             verificationCode)
         );
 
+        _logger.LogInformation("User with email {email} successfully registered.", dto.Email);
+        
         var accessToken = _jwtProvider.GenerateToken(accountResult.Value, sessionResult.Value);
         return Result.Ok(new LoginResponseDto(accessToken, refreshToken, accountResult.Value.Id.ToString()));
     }
