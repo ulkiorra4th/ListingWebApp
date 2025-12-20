@@ -83,34 +83,6 @@ export default function MyListingsPage() {
         </div>
       </Card>
 
-      <Card title="Проверить лот по ID" subtitle="Реальный запрос к API: вводите ID лота, чтобы увидеть детали.">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <Input label="ID лота" placeholder="GUID" value={lookupId} onChange={(e) => setLookupId(e.target.value)} />
-          <Button onClick={handleLookup} loading={loading} iconLeft={<ShieldCheck size={16} />}>
-            Загрузить из API
-          </Button>
-          {listing && (
-            <div className="md:col-span-2 rounded-2xl border border-primary-400/40 bg-primary-500/10 px-4 py-3 text-sm text-slate-100">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-white">{listing.id}</span>
-                <Badge tone="info">{statusLabel[listing.status as number] ?? listing.status}</Badge>
-              </div>
-              <p className="text-xs text-slate-300">
-                Цена: {formatCurrency(Number(listing.priceAmount), listing.currencyCode)} • Обновлено:{' '}
-                {listing.updatedAt ? formatDate(listing.updatedAt) : '—'}
-              </p>
-              <p className="text-xs text-slate-400">ItemEntry: {listing.itemEntryId}</p>
-            </div>
-          )}
-        </div>
-        {message && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-slate-200">
-            <AlertCircle size={16} className="text-amber-300" />
-            <span>{message}</span>
-          </div>
-        )}
-      </Card>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((lot) => {
           const rarityName = rarityLabel(lot.rarity);

@@ -34,6 +34,10 @@ export function Header({
           </div>
         )}
         <div className="flex items-center gap-3">
+          <div className="flex flex-col text-right">
+            <span className="text-sm font-semibold text-white">{profileName ?? 'Гость'}</span>
+            <span className="text-xs text-slate-400">{email ?? 'Не авторизован'}</span>
+          </div>
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-inner">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Аватар" className="h-full w-full object-cover" />
@@ -42,10 +46,6 @@ export function Header({
                 {profileName?.slice(0, 1).toUpperCase() ?? 'LM'}
               </div>
             )}
-          </div>
-          <div className="flex flex-col text-right">
-            <span className="text-sm font-semibold text-white">{profileName ?? 'Гость'}</span>
-            <span className="text-xs text-slate-400">{email ?? 'Не авторизован'}</span>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onLogout} iconLeft={<LogOut size={16} />}>

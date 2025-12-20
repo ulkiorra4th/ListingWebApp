@@ -179,9 +179,9 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
 
   const content = (
     <>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
         <Card title="Аккаунт" className="lg:col-span-1">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 mb-2">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80">
               {profileAvatarUrl ? (
                 <img src={profileAvatarUrl} alt="Аватар" className="h-full w-full object-cover" />
@@ -209,28 +209,10 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
             </div>
           </div>
         </Card>
-
-        <Card title="Валюты" subtitle="Список с бэкенда" className="lg:col-span-2">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {currencies.map((c) => (
-              <div key={c.currencyCode} className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-white">{c.currencyCode}</span>
-                    {c.iconKey && <span className="text-xl">{c.iconKey}</span>}
-                  </div>
-                  <Badge tone="info">{c.isTransferAllowed ? 'transfer' : 'locked'}</Badge>
-                </div>
-                <p className="text-sm text-slate-300">{c.name}</p>
-                {c.description && <p className="text-xs text-slate-500">{c.description}</p>}
-              </div>
-            ))}
-          </div>
-        </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Кошелек" subtitle="Получение/пополнение/списание">
+        <Card title="Кошелек" subtitle="Пополнение/списание">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Select label="Валюта" value={currencyCode ?? ''} onChange={(e) => setCurrencyCode(e.target.value)}>
               {currencies.map((c) => (
@@ -278,98 +260,43 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
           </div>
         </Card>
 
-        <Card title="Item / Entry" subtitle="Получить предмет или создать запись">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Input label="Item Id" placeholder="GUID" value={itemIdInput} onChange={(e) => setItemIdInput(e.target.value)} />
-            <Button variant="secondary" onClick={() => fetchItem(itemIdInput)} loading={itemsLoading} iconLeft={<ClipboardCheck size={16} />}>
-              Получить item
-            </Button>
-          </div>
-          {item && (
-            <div className="mt-3 rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
-              <div className="flex items-center justify-between">
-                <span className="text-white">{item.name}</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r ${rarityColor(rarityLabel(item.rarity))}`}>
-                  {rarityLabel(item.rarity)}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">Base price: {formatCurrency(item.basePrice)}</p>
-            </div>
-          )}
-
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Input
-              label="ItemType Id для entry"
-              placeholder="GUID"
-              value={itemForm.itemTypeId}
-              onChange={(e) => setItemForm((prev) => ({ ...prev, itemTypeId: e.target.value }))}
-            />
-            <Input
-              label="Псевдоним"
-              placeholder="Отображаемое имя"
-              value={itemForm.pseudonym}
-              onChange={(e) => setItemForm((prev) => ({ ...prev, pseudonym: e.target.value }))}
-            />
-            <Button onClick={handleCreateEntry} loading={itemsLoading} iconLeft={<CheckCircle2 size={16} />}>
-              Создать entry
-            </Button>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Input label="Получить entry" placeholder="GUID" value={entryIdInput} onChange={(e) => setEntryIdInput(e.target.value)} />
-            <Button variant="secondary" onClick={() => fetchEntry(entryIdInput)} loading={itemsLoading}>
-              Загрузить entry
-            </Button>
-          </div>
-
-          {entry && (
-            <div className="mt-3 rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
-              <p className="text-white">Entry: {entry.id}</p>
-              <p className="text-xs text-slate-400">Owner: {entry.ownerId}</p>
-              <p className="text-xs text-slate-400">ItemType: {entry.itemTypeId}</p>
-            </div>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Лоты" subtitle="Создать / получить / купить">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Input
-              label="ItemEntry Id"
-              placeholder="GUID"
-              value={listingForm.itemEntryId}
-              onChange={(e) => setListingForm((prev) => ({ ...prev, itemEntryId: e.target.value }))}
+                label="ItemEntry Id"
+                placeholder="GUID"
+                value={listingForm.itemEntryId}
+                onChange={(e) => setListingForm((prev) => ({ ...prev, itemEntryId: e.target.value }))}
             />
             <Select
-              label="Валюта"
-              value={currencyCode ?? listingForm.currencyCode}
-              onChange={(e) => {
-                setCurrencyCode(e.target.value);
-                setListingForm((prev) => ({ ...prev, currencyCode: e.target.value }));
-              }}
+                label="Валюта"
+                value={currencyCode ?? listingForm.currencyCode}
+                onChange={(e) => {
+                  setCurrencyCode(e.target.value);
+                  setListingForm((prev) => ({ ...prev, currencyCode: e.target.value }));
+                }}
             >
               {currencies.map((c) => (
-                <option key={c.currencyCode} value={c.currencyCode}>
-                  {c.currencyCode}
-                </option>
+                  <option key={c.currencyCode} value={c.currencyCode}>
+                    {c.currencyCode}
+                  </option>
               ))}
             </Select>
             <Input
-              label="Цена"
-              type="number"
-              value={listingForm.priceAmount}
-              onChange={(e) => setListingForm((prev) => ({ ...prev, priceAmount: Number(e.target.value) }))}
+                label="Цена"
+                type="number"
+                value={listingForm.priceAmount}
+                onChange={(e) => setListingForm((prev) => ({ ...prev, priceAmount: Number(e.target.value) }))}
             />
             <Select
-              label="Статус"
-              value={listingForm.status}
-              onChange={(e) => setListingForm((prev) => ({ ...prev, status: Number(e.target.value) }))}
+                label="Статус"
+                value={listingForm.status}
+                onChange={(e) => setListingForm((prev) => ({ ...prev, status: Number(e.target.value) }))}
             >
               {listingStatusOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
               ))}
             </Select>
           </div>
@@ -392,25 +319,28 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
           </div>
 
           {listing && (
-            <div className="mt-4 rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
-              <div className="flex items-center justify-between">
-                <p className="text-white">{listing.id}</p>
-                <Badge tone="info">{ListingStatus[listing.status as ListingStatus] ?? listing.status}</Badge>
+              <div className="mt-4 rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
+                <div className="flex items-center justify-between">
+                  <p className="text-white">{listing.id}</p>
+                  <Badge tone="info">{ListingStatus[listing.status as ListingStatus] ?? listing.status}</Badge>
+                </div>
+                <p className="text-xs text-slate-400">Цена: {formatCurrency(Number(listing.priceAmount), listing.currencyCode)}</p>
+                <p className="text-xs text-slate-400">ItemEntry: {listing.itemEntryId}</p>
+                <p className="text-xs text-slate-500">Создан: {formatDate(listing.createdAt)}</p>
               </div>
-              <p className="text-xs text-slate-400">Цена: {formatCurrency(Number(listing.priceAmount), listing.currencyCode)}</p>
-              <p className="text-xs text-slate-400">ItemEntry: {listing.itemEntryId}</p>
-              <p className="text-xs text-slate-500">Создан: {formatDate(listing.createdAt)}</p>
-            </div>
           )}
 
           {purchaseResult && (
-            <div className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">
-              Покупка успешно выполнена. Транзакция {purchaseResult.id}
-            </div>
+              <div className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+                Покупка успешно выполнена. Транзакция {purchaseResult.id}
+              </div>
           )}
         </Card>
+        
+      </div>
 
-        <Card title="Транзакции" subtitle="Получить по ID">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
+        <Card title="Транзакции" subtitle="История транзакций с другими игроками">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Input label="ID транзакции" placeholder="GUID" value={txIdInput} onChange={(e) => setTxIdInput(e.target.value)} />
             <Button variant="secondary" onClick={handleFetchTx} loading={txLoading} iconLeft={<CreditCard size={16} />}>

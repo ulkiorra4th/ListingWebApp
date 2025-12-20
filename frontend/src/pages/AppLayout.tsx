@@ -8,7 +8,7 @@ const navItems = [
   { to: '/app', label: 'Открытые лоты', icon: <Sparkles size={16} />, end: true },
   { to: '/app/inventory', label: 'Мои предметы', icon: <Boxes size={16} /> },
   { to: '/app/listings', label: 'Мои лоты', icon: <Tags size={16} /> },
-  { to: '/app/tools', label: 'Сервисные формы', icon: <Wrench size={16} /> },
+  { to: '/app/tools', label: 'Админка', icon: <Wrench size={16} /> },
 ];
 
 export default function AppLayout() {

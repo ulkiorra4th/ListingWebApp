@@ -28,7 +28,6 @@ export const openListings: MarketListing[] = [
     seller: 'NeoSamurai',
     status: ListingStatus.Approved,
     icon: '🗡️',
-    demand: 'high',
     updatedAt: '2025-12-12T10:00:00Z',
   },
   {
@@ -42,7 +41,6 @@ export const openListings: MarketListing[] = [
     seller: 'Frostbite',
     status: ListingStatus.Approved,
     icon: '🏹',
-    demand: 'medium',
     updatedAt: '2025-12-12T09:10:00Z',
   },
   {
@@ -56,7 +54,6 @@ export const openListings: MarketListing[] = [
     seller: 'VoltRider',
     status: ListingStatus.Approved,
     icon: '🔫',
-    demand: 'high',
     updatedAt: '2025-12-12T08:45:00Z',
   },
   {
@@ -70,7 +67,6 @@ export const openListings: MarketListing[] = [
     seller: 'SandRunner',
     status: ListingStatus.Approved,
     icon: '🛡️',
-    demand: 'medium',
     updatedAt: '2025-12-12T07:30:00Z',
   },
   {
@@ -84,7 +80,6 @@ export const openListings: MarketListing[] = [
     seller: 'GhostStep',
     status: ListingStatus.Approved,
     icon: '🥾',
-    demand: 'low',
     updatedAt: '2025-12-12T06:20:00Z',
   },
   {
@@ -98,7 +93,6 @@ export const openListings: MarketListing[] = [
     seller: 'Frostbite',
     status: ListingStatus.Approved,
     icon: '🧊',
-    demand: 'medium',
     updatedAt: '2025-12-12T06:00:00Z',
     isMine: true,
   },
@@ -113,7 +107,6 @@ export const openListings: MarketListing[] = [
     seller: 'Guardian',
     status: ListingStatus.Approved,
     icon: '🛡️',
-    demand: 'low',
     updatedAt: '2025-12-12T05:45:00Z',
     isMine: true,
   },
@@ -128,7 +121,6 @@ export const openListings: MarketListing[] = [
     seller: 'Shadowstep',
     status: ListingStatus.Approved,
     icon: '🗡️',
-    demand: 'high',
     updatedAt: '2025-12-12T05:30:00Z',
   },
 ];

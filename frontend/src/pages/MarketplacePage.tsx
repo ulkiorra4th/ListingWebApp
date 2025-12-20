@@ -135,10 +135,6 @@ export default function MarketplacePage() {
                   {rarityName}
                 </span>
                 <Badge tone="success">{formatCurrency(listing.price, listing.currency)}</Badge>
-                <Badge tone="ghost" className="gap-1">
-                  <Flame size={14} className="text-amber-300" />
-                  {listing.demand === 'high' ? 'Высокий спрос' : listing.demand === 'medium' ? 'Стабильный' : 'Низкий'}
-                </Badge>
               </div>
 
               <div className="flex items-center justify-between text-xs text-slate-400">
