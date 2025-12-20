@@ -11,7 +11,7 @@ import type { Account, Profile } from '@/types';
 import { AccountStatus } from '@/types';
 import { login, logout as logoutApi, register, verifyAccount } from '@/services/authService';
 import { getAccountById } from '@/services/accountsService';
-import { createProfile as createProfileApi, getProfiles, uploadProfileIcon } from '@/services/profilesService';
+import { createProfile as createProfileApi, getProfiles, uploadProfileIcon, getProfileIconUrl } from '@/services/profilesService';
 import type { CreateProfilePayload } from '@/services/profilesService';
 import { createWallet, getWallet } from '@/services/walletService';
 import { tokenStorage } from '@/api/token';
@@ -27,6 +27,7 @@ export type AuthContextValue = {
   accountId: string | null;
   walletReady: boolean;
   walletCurrency: string | null;
+  profileAvatarUrl: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   verify: (code: string) => Promise<void>;
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [avatarSkipped, setAvatarSkipped] = useState(false);
   const [walletReady, setWalletReady] = useState(false);
   const [walletCurrency, setWalletCurrency] = useState<string | null>(() => localStorage.getItem(WALLET_CURRENCY_KEY));
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
 
   const profile = profiles[0] ?? null;
   const isAuthenticated = Boolean(accountId && tokenStorage.getAccessToken());
@@ -81,6 +83,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setWalletCurrency(null);
     setWalletReady(false);
   }, []);
+
+  const resolveAvatar = useCallback(
+    async (id: string, profs: Profile[]) => {
+      const mainProfile = profs[0];
+      if (!mainProfile?.iconKey) {
+        setProfileAvatarUrl(null);
+        return;
+      }
+
+      try {
+        const url = await getProfileIconUrl(id, mainProfile.id);
+        setProfileAvatarUrl(url);
+      } catch {
+        setProfileAvatarUrl(null);
+      }
+    },
+    [],
+  );
 
   const ensureWallet = useCallback(
     async (id: string) => {
@@ -107,9 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccount(acc);
       setProfiles(prof);
       setAvatarSkipped(false);
+      await resolveAvatar(id, prof);
       await ensureWallet(id);
     },
-    [ensureWallet],
+    [ensureWallet, resolveAvatar],
   );
 
   const refresh = useCallback(async () => {
@@ -232,6 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccountId(null);
       setAvatarSkipped(false);
       clearWalletInfo();
+      setProfileAvatarUrl(null);
       setLoading(false);
     }
   }, [clearWalletInfo]);
@@ -251,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verify: handleVerify,
       createProfile: handleCreateProfile,
       createWallet: handleCreateWallet,
+      profileAvatarUrl,
       uploadAvatar: handleUploadAvatar,
       skipAvatar: handleSkipAvatar,
       refresh,
@@ -270,6 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       handleVerify,
       handleCreateProfile,
       handleCreateWallet,
+      profileAvatarUrl,
       handleUploadAvatar,
       handleSkipAvatar,
       refresh,

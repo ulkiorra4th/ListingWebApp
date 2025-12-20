@@ -45,3 +45,8 @@ export async function uploadProfileIcon(accountId: string, profileId: string, fi
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 }
+
+export async function getProfileIconUrl(accountId: string, profileId: string): Promise<string> {
+  const response = await api.get<ApiResponse<string>>(`/v1/accounts/${accountId}/profiles/${profileId}/icon`);
+  return response.data.data;
+}

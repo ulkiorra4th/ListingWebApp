@@ -5,11 +5,13 @@ export function Header({
   profileName,
   email,
   walletLabel,
+  avatarUrl,
   onLogout,
 }: {
   profileName?: string;
   email?: string;
   walletLabel?: string;
+  avatarUrl?: string | null;
   onLogout: () => void;
 }) {
   return (
@@ -31,9 +33,20 @@ export function Header({
             <span>{walletLabel}</span>
           </div>
         )}
-        <div className="flex flex-col text-right">
-          <span className="text-sm font-semibold text-white">{profileName ?? 'Гость'}</span>
-          <span className="text-xs text-slate-400">{email ?? 'Не авторизован'}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-inner">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Аватар" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-500/50 to-accent-500/50 text-white">
+                {profileName?.slice(0, 1).toUpperCase() ?? 'LM'}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col text-right">
+            <span className="text-sm font-semibold text-white">{profileName ?? 'Гость'}</span>
+            <span className="text-xs text-slate-400">{email ?? 'Не авторизован'}</span>
+          </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onLogout} iconLeft={<LogOut size={16} />}>
           Выйти

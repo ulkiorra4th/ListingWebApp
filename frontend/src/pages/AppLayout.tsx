@@ -12,10 +12,10 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { profile, account, logout } = useAuth();
+  const { profile, account, logout, profileAvatarUrl } = useAuth();
 
   return (
-    <AppShell profileName={profile?.nickname} email={account?.email} onLogout={logout}>
+    <AppShell profileName={profile?.nickname} email={account?.email} avatarUrl={profileAvatarUrl} onLogout={logout}>
       <nav className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-white/5 p-2">
         {navItems.map((item) => (
           <NavLink

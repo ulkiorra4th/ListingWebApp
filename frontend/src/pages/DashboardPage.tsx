@@ -16,7 +16,7 @@ import { formatCurrency, formatDate, rarityColor } from '@/utils/formatters';
 import { AccountStatus, ItemRarity, ListingStatus } from '@/types';
 
 export default function DashboardPage({ embed = false }: { embed?: boolean } = {}) {
-  const { profile, account, accountId, logout } = useAuth();
+  const { profile, account, accountId, logout, profileAvatarUrl } = useAuth();
   const { currencies } = useCurrencies();
   const [currencyCode, setCurrencyCode] = useState<string | null>(null);
   const { wallet, credit, debit, refresh: refreshWallet, loading: walletLoading } = useWallet(accountId, currencyCode);
@@ -181,6 +181,19 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
     <>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card title="Аккаунт" className="lg:col-span-1">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80">
+              {profileAvatarUrl ? (
+                <img src={profileAvatarUrl} alt="Аватар" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-semibold text-slate-200">{profile?.nickname?.[0] ?? 'U'}</span>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-white">{profile?.nickname ?? '—'}</span>
+              <span className="text-xs text-slate-400">{account?.email ?? '—'}</span>
+            </div>
+          </div>
           <div className="flex flex-col gap-2 text-sm text-slate-300">
             <div className="flex items-center justify-between">
               <span>Email</span>
@@ -194,12 +207,6 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
               <span>Профиль</span>
               <span className="text-white">{profile?.nickname ?? '—'}</span>
             </div>
-            {profile?.iconKey && (
-              <div className="flex items-center justify-between">
-                <span>Аватар</span>
-                <span className="text-primary-200">{profile.iconKey}</span>
-              </div>
-            )}
           </div>
         </Card>
 
@@ -437,6 +444,7 @@ export default function DashboardPage({ embed = false }: { embed?: boolean } = {
       profileName={profile?.nickname ?? 'Трейдер'}
       email={account?.email}
       walletLabel={wallet ? formatCurrency(wallet.balance, wallet.currencyCode) : undefined}
+      avatarUrl={profileAvatarUrl}
       onLogout={logout}
     >
       {content}

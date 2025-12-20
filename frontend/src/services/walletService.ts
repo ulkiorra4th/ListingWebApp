@@ -12,6 +12,7 @@ export async function createWallet(accountId: string, currencyCode: string): Pro
 
 export async function creditWallet(accountId: string, currencyCode: string, amount: number): Promise<void> {
   await api.post(`/v1/accounts/${accountId}/wallets/${currencyCode}/credit`, {
+    currencyCode,
     amount,
     transactionDate: new Date().toISOString(),
   });
@@ -19,6 +20,7 @@ export async function creditWallet(accountId: string, currencyCode: string, amou
 
 export async function debitWallet(accountId: string, currencyCode: string, amount: number): Promise<void> {
   await api.post(`/v1/accounts/${accountId}/wallets/${currencyCode}/debit`, {
+    currencyCode,
     amount,
     transactionDate: new Date().toISOString(),
   });
