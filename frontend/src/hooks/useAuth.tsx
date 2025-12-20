@@ -55,7 +55,7 @@ function deriveStep(account: Account | null, profiles: Profile[], avatarSkipped:
   if (!isVerified(account)) return 'verify';
   if (!profiles.length) return 'profile';
   if (!avatarSkipped && !profiles[0].iconKey) return 'avatar';
-  if (!walletReady) return 'wallet';
+  if (!walletReady && !account) return 'wallet';
   return 'ready';
 }
 

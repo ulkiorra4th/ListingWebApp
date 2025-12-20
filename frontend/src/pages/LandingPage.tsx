@@ -11,9 +11,8 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { AccountStatus, CountryCode, LanguageCode } from '@/types';
 
 function getErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
-  return 'Не удалось выполнить действие';
+  return error.response?.data?.error;
 }
 
 export default function LandingPage() {
@@ -231,7 +230,7 @@ export default function LandingPage() {
                 </Button>
               </div>
               <p className="text-xs text-slate-400">
-                После регистрации проверьте почту: код нужен на следующем шаге. Если вы уже регистрировались — просто войдите и
+                Пароль должен содержать как минимум одну строчную, одну заглавную букву, один спецсимвол и одну цифру. Минимальная длина пароля - 8 символов. Если вы уже регистрировались — просто войдите и
                 перейдите к верификации/профилю.
               </p>
             </div>

@@ -92,7 +92,7 @@ internal sealed class AuthService : IAuthService
         {
             _logger.LogError("Registration failed for user with email {email}. Errors: {errors}", 
                 dto.Email, "invalid password.");
-            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Bad password."));
+            return Result.Fail<LoginResponseDto>(new ValidationError(nameof(Account), "Bad password"));
         }
         
         var hashResult = _cryptographyService.HashSecret(dto.Password);

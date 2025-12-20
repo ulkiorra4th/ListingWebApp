@@ -45,13 +45,13 @@ public sealed class Account
         string salt)
     {
         if (!RegexPatterns.EmailRegex().IsMatch(email)) 
-            return Result.Fail<Account>(new ValidationError(nameof(Account), "Invalid email."));
+            return Result.Fail<Account>(new ValidationError(nameof(Account), "Invalid email"));
         
         if (string.IsNullOrWhiteSpace(passwordHash)) 
-            return Result.Fail<Account>( new ValidationError(nameof(Account), "Password is required."));
+            return Result.Fail<Account>( new ValidationError(nameof(Account), "Password is required"));
        
         if (string.IsNullOrWhiteSpace(salt)) 
-            return Result.Fail<Account>(new ValidationError(nameof(Account), "Salt is required."));
+            return Result.Fail<Account>(new ValidationError(nameof(Account), "Salt is required"));
         
         var now = DateTime.UtcNow;
         return Result.Ok(new Account(
