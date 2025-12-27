@@ -36,10 +36,9 @@ public sealed class CurrenciesController(ICurrenciesService currenciesService) :
 
     [HttpPatch("{code}/icon")]
     [Authorize(Roles = "Admin")]
-    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateIconAsync(
         [FromRoute] string code, 
-        [FromForm] IFormFile? file, 
+        IFormFile? file, 
         CancellationToken ct)
     {
         if (file is null || file.Length == 0)

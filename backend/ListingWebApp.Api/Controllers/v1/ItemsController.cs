@@ -28,10 +28,9 @@ public sealed class ItemsController(IItemsService itemsService) : ControllerBase
 
     [HttpPatch("{id:guid}/icon")]
     [Authorize(Roles = "Admin")]
-    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateIconAsync(
         [FromRoute] Guid id, 
-        [FromForm] IFormFile? file, 
+        IFormFile? file, 
         CancellationToken ct)
     {
         if (file is null || file.Length == 0)

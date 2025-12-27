@@ -75,11 +75,10 @@ public sealed class ProfilesController(IProfilesService profilesService) : Contr
     
     [HttpPatch("{id:guid}/icon")]
     [Authorize(Roles = "User,Admin")]
-    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateIconAsync(
         [FromRoute] Guid accountId,
         [FromRoute] Guid id,
-        [FromForm] IFormFile? file,
+        IFormFile? file,
         CancellationToken ct)
     {
         if (file is null || file.Length == 0)
